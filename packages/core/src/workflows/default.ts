@@ -5,6 +5,7 @@ import type { SerializedError } from '../error';
 import { getErrorFromUnknown } from '../error/utils.js';
 import type { PubSub } from '../events/pubsub';
 import type { Span, SpanType, TracingContext, TracingPolicy } from '../observability';
+import { createObservabilityContext } from '../observability';
 import type { ExecutionGraph } from './execution-engine';
 import { ExecutionEngine } from './execution-engine';
 import type {
@@ -739,9 +740,7 @@ export class DefaultExecutionEngine extends ExecutionEngine {
         resume,
         timeTravel,
         restart,
-        tracingContext: {
-          currentSpan: workflowSpan,
-        },
+        ...createObservabilityContext({ currentSpan: workflowSpan }),
         abortController: params.abortController,
         pubsub: params.pubsub,
         requestContext: currentRequestContext,

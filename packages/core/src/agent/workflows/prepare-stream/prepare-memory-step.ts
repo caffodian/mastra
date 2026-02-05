@@ -1,6 +1,7 @@
 import deepEqual from 'fast-deep-equal';
 import { z } from 'zod';
 import { MastraError, ErrorDomain, ErrorCategory } from '../../../error';
+import { resolveObservabilityContext } from '../../../observability';
 import type { SystemMessage } from '../../../llm';
 import type { MastraMemory } from '../../../memory/memory';
 import type { MemoryConfig, StorageThreadType } from '../../../memory/types';
@@ -62,7 +63,8 @@ export function createPrepareMemoryStep<OUTPUT = undefined>({
     id: 'prepare-memory-step',
     inputSchema: z.object({}),
     outputSchema: prepareMemoryStepOutputSchema,
-    execute: async ({ tracingContext }) => {
+    execute: async (params) => {
+      const { tracingContext } = resolveObservabilityContext(params);
       const thread = threadFromArgs;
       const messageList = new MessageList({
         threadId: thread?.id,

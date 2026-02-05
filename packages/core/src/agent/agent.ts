@@ -33,7 +33,7 @@ import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig } from '../memory/types';
 import type { TracingContext, TracingProperties } from '../observability';
-import { EntityType, InternalSpans, SpanType, getOrCreateSpan } from '../observability';
+import { EntityType, InternalSpans, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
 import type {
   InputProcessorOrWorkflow,
   OutputProcessorOrWorkflow,
@@ -3352,7 +3352,7 @@ export class Agent<
     });
 
     const run = await executionWorkflow.createRun();
-    const result = await run.start({ tracingContext: { currentSpan: agentSpan } });
+    const result = await run.start({ ...createObservabilityContext({ currentSpan: agentSpan }) });
 
     return result;
   }
@@ -3523,7 +3523,7 @@ export class Agent<
       requestContext,
       structuredOutput,
       overrideScorers,
-      tracingContext: { currentSpan: agentSpan },
+      ...createObservabilityContext({ currentSpan: agentSpan }),
     });
 
     agentSpan?.end({

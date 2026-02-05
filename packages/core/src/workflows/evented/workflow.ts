@@ -13,7 +13,7 @@ import type { MastraScorers } from '../../evals';
 import type { Event } from '../../events';
 import type { Mastra } from '../../mastra';
 import type { TracingContext } from '../../observability';
-import { EntityType, SpanType } from '../../observability';
+import { EntityType, SpanType, createObservabilityContext } from '../../observability';
 import type { Processor } from '../../processors';
 import { ProcessorRunner, ProcessorStepOutputSchema, ProcessorStepSchema } from '../../processors';
 import type { ProcessorStepOutput } from '../../processors/step-schema';
@@ -558,7 +558,7 @@ function createStepFromTool<TStepInput, TSuspend, TResume, TStepOutput>(
       const context = {
         mastra,
         requestContext,
-        tracingContext: { currentSpan: undefined }, // TODO: Pass proper tracing context when evented workflows support tracing
+        ...createObservabilityContext(),
         workflow: {
           runId,
           workflowId,

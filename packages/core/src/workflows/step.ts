@@ -1,7 +1,7 @@
 import type { MastraScorers } from '../evals';
 import type { PubSub } from '../events';
 import type { Mastra } from '../mastra';
-import type { TracingContext } from '../observability';
+import type { ObservabilityContextMixin } from '../observability';
 import type { RequestContext } from '../request-context';
 import type { InferZodLikeSchema, SchemaWithValidation } from '../stream/base/schema';
 import type { ToolStream } from '../tools/stream';
@@ -28,7 +28,7 @@ export type ExecuteFunctionParams<
   TSuspend,
   EngineType,
   TRequestContext extends Record<string, any> | unknown = unknown,
-> = {
+> = Partial<ObservabilityContextMixin> & {
   runId: string;
   resourceId?: string;
   workflowId: string;

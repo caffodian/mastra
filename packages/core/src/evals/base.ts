@@ -6,8 +6,8 @@ import { ErrorCategory, ErrorDomain, MastraError } from '../error';
 import { resolveModelConfig } from '../llm/model/resolve-model';
 import type { MastraModelConfig } from '../llm/model/shared.types';
 import type { Mastra } from '../mastra';
+import { InternalSpans, resolveObservabilityContext } from '../observability';
 import type { TracingContext } from '../observability';
-import { InternalSpans } from '../observability';
 import { createWorkflow, createStep } from '../workflows';
 import type { ScoringSamplingConfig, ScorerRunInputForAgent, ScorerRunOutputForAgent } from './types';
 
@@ -476,7 +476,9 @@ class MastraScorer<
         description: `Scorer step: ${scorerStep.name}`,
         inputSchema: z.any(),
         outputSchema: z.any(),
-        execute: async ({ inputData, getInitData, tracingContext }) => {
+        execute: async (params) => {
+          const { inputData, getInitData } = params;
+          const { tracingContext } = resolveObservabilityContext(params);
           const { accumulatedResults = {}, generatedPrompts = {} } = inputData;
           const { run } = getInitData<{ run: ScorerRun<TInput, TRunOutput> }>();
 

@@ -1,6 +1,73 @@
 import type { Mastra } from '..';
 import type { IMastraLogger } from '../logger';
-import type { ObservabilityInstance, ConfigSelectorOptions, ObservabilityEntrypoint, ConfigSelector } from './types';
+import type {
+  ConfigSelector,
+  ConfigSelectorOptions,
+  Counter,
+  Gauge,
+  Histogram,
+  LoggerContext,
+  MetricsContext,
+  ObservabilityEntrypoint,
+  ObservabilityInstance,
+} from './types';
+
+
+// ============================================================================
+// No-Op Metric Instruments
+// ============================================================================
+
+const noOpCounter: Counter = {
+  add() {},
+};
+
+const noOpGauge: Gauge = {
+  set() {},
+};
+
+const noOpHistogram: Histogram = {
+  record() {},
+};
+
+// ============================================================================
+// No-Op LoggerContext
+// ============================================================================
+
+/**
+ * No-op logger context that silently discards all log calls.
+ * Used when observability is not configured.
+ */
+export const noOpLoggerContext: LoggerContext = {
+  debug() {},
+  info() {},
+  warn() {},
+  error() {},
+  fatal() {},
+};
+
+// ============================================================================
+// No-Op MetricsContext
+// ============================================================================
+
+/**
+ * No-op metrics context that silently discards all metric operations.
+ * Used when observability is not configured.
+ */
+export const noOpMetricsContext: MetricsContext = {
+  counter() {
+    return noOpCounter;
+  },
+  gauge() {
+    return noOpGauge;
+  },
+  histogram() {
+    return noOpHistogram;
+  },
+};
+
+// ============================================================================
+// No-Op Observability
+// ============================================================================
 
 export class NoOpObservability implements ObservabilityEntrypoint {
   setMastraContext(_options: { mastra: Mastra }): void {

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { RequestContext } from '../../di';
 import type { PubSub } from '../../events/pubsub';
-import { SpanType } from '../../observability';
+import { SpanType, createObservabilityContext } from '../../observability';
 import type { TracingContext } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import { PUBSUB_SYMBOL, STREAM_FORMAT_SYMBOL } from '../constants';
@@ -89,9 +89,7 @@ export async function executeSleep(engine: DefaultExecutionEngine, params: Execu
           executionContext.state = state;
         },
         retryCount: -1,
-        tracingContext: {
-          currentSpan: sleepSpan,
-        },
+        ...createObservabilityContext({ currentSpan: sleepSpan }),
         getInitData: () => stepResults?.input as any,
         getStepResult: getStepResult.bind(null, stepResults),
         // TODO: this function shouldn't have suspend probably?
@@ -216,9 +214,7 @@ export async function executeSleepUntil(
           executionContext.state = state;
         },
         retryCount: -1,
-        tracingContext: {
-          currentSpan: sleepUntilSpan,
-        },
+        ...createObservabilityContext({ currentSpan: sleepUntilSpan }),
         getInitData: () => stepResults?.input as any,
         getStepResult: getStepResult.bind(null, stepResults),
         // TODO: this function shouldn't have suspend probably?

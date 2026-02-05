@@ -1,6 +1,7 @@
 import { APICallError } from '@internal/ai-sdk-v5';
 import { MastraError, ErrorDomain, ErrorCategory } from '../../../error';
 import { getModelMethodFromAgentMethod } from '../../../llm/model/model-method-from-agent';
+import { resolveObservabilityContext, createObservabilityContext } from '../../../observability';
 import type { ModelLoopStreamArgs, ModelMethodType } from '../../../llm/model/model.loop.types';
 import type { MastraMemory } from '../../../memory/memory';
 import type { MemoryConfig } from '../../../memory/types';
@@ -51,7 +52,9 @@ export function createMapResultsStep<OUTPUT = undefined>({
   },
   ModelLoopStreamArgs<any, OUTPUT>
 >['execute'] {
-  return async ({ inputData, bail, tracingContext }) => {
+  return async (params) => {
+    const { inputData, bail } = params;
+    const { tracingContext } = resolveObservabilityContext(params);
     const toolsData = inputData['prepare-tools-step'];
     const memoryData = inputData['prepare-memory-step'];
 
@@ -162,7 +165,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
       methodType: modelMethodType,
       agentId,
       requestContext: result.requestContext!,
-      tracingContext: { currentSpan: agentSpan },
+      ...createObservabilityContext({ currentSpan: agentSpan }),
       runId,
       toolChoice: result.toolChoice,
       tools: result.tools,

@@ -11,6 +11,7 @@ import { ErrorCategory, ErrorDomain, MastraError } from '../../error';
 import type { MastraLLMVNext } from '../../llm/model/model.loop';
 import { noopLogger } from '../../logger';
 import type { TracingContext } from '../../observability';
+import { createObservabilityContext } from '../../observability';
 import { ProcessorRunner } from '../../processors/runner';
 import type { RequestContext } from '../../request-context';
 import { ChunkFrom } from '../../stream';
@@ -1721,8 +1722,7 @@ export async function createNetworkLoop({
           runId,
           memory,
           context: inputDataToUse,
-          // TODO: Pass proper tracing context when network supports tracing
-          tracingContext: { currentSpan: undefined },
+          ...createObservabilityContext(),
           writer,
         },
         { toolCallId, messages: [] },

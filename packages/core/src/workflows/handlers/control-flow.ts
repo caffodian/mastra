@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { RequestContext } from '../../di';
 import { MastraError, ErrorDomain, ErrorCategory, getErrorFromUnknown } from '../../error';
 import type { PubSub } from '../../events/pubsub';
-import { SpanType } from '../../observability';
+import { SpanType, createObservabilityContext } from '../../observability';
 import type { TracingContext } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import { selectFields } from '../../utils';
@@ -161,9 +161,7 @@ export async function executeParallel(
           state: executionContext.state,
           tracingIds: executionContext.tracingIds,
         },
-        tracingContext: {
-          currentSpan: parallelSpan,
-        },
+        ...createObservabilityContext({ currentSpan: parallelSpan }),
         pubsub,
         abortController,
         requestContext,
@@ -324,9 +322,7 @@ export async function executeConditional(
             inputData: prevOutput,
             state: executionContext.state,
             retryCount: -1,
-            tracingContext: {
-              currentSpan: evalSpan,
-            },
+            ...createObservabilityContext({ currentSpan: evalSpan }),
             getInitData: () => stepResults?.input as any,
             getStepResult: getStepResult.bind(null, stepResults),
             bail: (() => {}) as () => InnerOutput,
@@ -458,9 +454,7 @@ export async function executeConditional(
           state: executionContext.state,
           tracingIds: executionContext.tracingIds,
         },
-        tracingContext: {
-          currentSpan: conditionalSpan,
-        },
+        ...createObservabilityContext({ currentSpan: conditionalSpan }),
         pubsub,
         abortController,
         requestContext,
@@ -620,9 +614,7 @@ export async function executeLoop(
       resume: currentResume,
       timeTravel: currentTimeTravel,
       prevOutput: (result as { output: any }).output,
-      tracingContext: {
-        currentSpan: loopSpan,
-      },
+      ...createObservabilityContext({ currentSpan: loopSpan }),
       pubsub,
       abortController,
       requestContext,
@@ -685,9 +677,7 @@ export async function executeLoop(
           inputData: result.output,
           state: executionContext.state,
           retryCount: -1,
-          tracingContext: {
-            currentSpan: evalSpan,
-          },
+          ...createObservabilityContext({ currentSpan: evalSpan }),
           iterationCount: iteration + 1,
           getInitData: () => stepResults?.input as any,
           getStepResult: getStepResult.bind(null, stepResults),
@@ -889,7 +879,7 @@ export async function executeForeach(
           executionContext: { ...executionContext, foreachIndex: k },
           resume: resumeToUse,
           prevOutput: item,
-          tracingContext: { currentSpan: loopSpan },
+          ...createObservabilityContext({ currentSpan: loopSpan }),
           pubsub,
           abortController,
           requestContext,

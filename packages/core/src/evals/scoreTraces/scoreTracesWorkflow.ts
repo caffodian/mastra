@@ -1,7 +1,7 @@
 import pMap from 'p-map';
 import z from 'zod';
 import { ErrorCategory, ErrorDomain, MastraError } from '../../error';
-import { InternalSpans } from '../../observability';
+import { InternalSpans, resolveObservabilityContext } from '../../observability';
 import type { TracingContext } from '../../observability';
 import type { SpanRecord, TraceRecord, MastraStorage } from '../../storage';
 import { createStep, createWorkflow } from '../../workflows/evented';
@@ -22,7 +22,9 @@ const getTraceStep = createStep({
     scorerId: z.string(),
   }),
   outputSchema: z.any(),
-  execute: async ({ inputData, tracingContext, mastra }) => {
+  execute: async (params) => {
+    const { inputData, mastra } = params;
+    const { tracingContext } = resolveObservabilityContext(params);
     const logger = mastra.getLogger();
     if (!logger) {
       console.warn(
