@@ -22,7 +22,7 @@ const getTraceStep = createStep({
     scorerId: z.string(),
   }),
   outputSchema: z.any(),
-  execute: async (params) => {
+  execute: async params => {
     const { inputData, mastra } = params;
     const { tracingContext } = resolveObservabilityContext(params);
     const logger = mastra.getLogger();

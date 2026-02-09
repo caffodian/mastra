@@ -10,8 +10,8 @@ import type { Mastra } from '../../mastra';
 import type { RequestContext } from '../../request-context';
 import type { LanguageModelUsage, ProviderMetadata, StepStartPayload } from '../../stream/types';
 import type { WorkflowRunStatus, WorkflowStepStatus } from '../../workflows';
-import type { FeedbackInput } from './feedback';
 import type { CustomSamplerOptions, ObservabilityInstance } from './core';
+import type { FeedbackInput } from './feedback';
 import type { ScoreInput } from './scores';
 
 // ============================================================================
@@ -1032,4 +1032,3 @@ export interface SpanOutputProcessor {
  * ```
  */
 export type CustomSpanFormatter = (span: AnyExportedSpan) => AnyExportedSpan | Promise<AnyExportedSpan>;
-

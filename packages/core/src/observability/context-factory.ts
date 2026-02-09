@@ -49,12 +49,6 @@ export function createObservabilityContext(
  * @param partial - Partial context from ExecuteFunctionParams
  * @returns Complete ObservabilityContextMixin
  */
-export function resolveObservabilityContext(
-  partial: Partial<ObservabilityContextMixin>,
-): ObservabilityContextMixin {
-  return createObservabilityContext(
-    partial.tracing ?? partial.tracingContext,
-    partial.logger,
-    partial.metrics,
-  );
+export function resolveObservabilityContext(partial: Partial<ObservabilityContextMixin>): ObservabilityContextMixin {
+  return createObservabilityContext(partial.tracing ?? partial.tracingContext, partial.logger, partial.metrics);
 }

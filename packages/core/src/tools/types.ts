@@ -12,8 +12,7 @@ import type { ElicitRequest, ElicitResult } from '@modelcontextprotocol/sdk/type
 
 import type { MastraUnion } from '../action';
 import type { Mastra } from '../mastra';
-import type { TracingContext } from '../observability';
-import type { ObservabilityContextMixin } from '../observability';
+import type { TracingContext, ObservabilityContextMixin } from '../observability';
 import type { RequestContext } from '../request-context';
 import type { SchemaWithValidation } from '../stream/base/schema';
 import type { SuspendOptions, OutputWriter } from '../workflows';

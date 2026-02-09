@@ -14,8 +14,6 @@ import type { LoggerContext, LogEvent } from './logging';
 import type { MetricsContext, MetricEvent } from './metrics';
 import type { ScoreEvent } from './scores';
 import type {
-  AnyExportedSpan,
-  AnySpan,
   CreateSpanOptions,
   ExportedSpan,
   Span,

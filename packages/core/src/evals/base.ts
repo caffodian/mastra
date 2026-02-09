@@ -476,7 +476,7 @@ class MastraScorer<
         description: `Scorer step: ${scorerStep.name}`,
         inputSchema: z.any(),
         outputSchema: z.any(),
-        execute: async (params) => {
+        execute: async params => {
           const { inputData, getInitData } = params;
           const { tracingContext } = resolveObservabilityContext(params);
           const { accumulatedResults = {}, generatedPrompts = {} } = inputData;
