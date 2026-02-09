@@ -2464,7 +2464,7 @@ export class Mastra<
    * Note: For the infrastructure logger (IMastraLogger), use getLogger() instead.
    */
   get log(): LoggerContext {
-    return this.#observability.getDefaultInstance()?.getLoggerContext() ?? noOpLoggerContext;
+    return this.#observability.getDefaultInstance()?.getLoggerContext?.() ?? noOpLoggerContext;
   }
 
   /**
@@ -2473,7 +2473,7 @@ export class Mastra<
    * Use for background jobs, startup metrics, or other non-traced scenarios.
    */
   get metrics(): MetricsContext {
-    return this.#observability.getDefaultInstance()?.getMetricsContext() ?? noOpMetricsContext;
+    return this.#observability.getDefaultInstance()?.getMetricsContext?.() ?? noOpMetricsContext;
   }
 
   public getServerMiddleware() {

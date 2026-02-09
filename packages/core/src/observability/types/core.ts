@@ -154,13 +154,13 @@ export interface ObservabilityInstance {
    * Get a LoggerContext for this instance.
    * Returns no-op context when logging is not configured on this instance.
    */
-  getLoggerContext(): LoggerContext;
+  getLoggerContext?(): LoggerContext;
 
   /**
    * Get a MetricsContext for this instance.
    * Returns no-op context when metrics are not configured on this instance.
    */
-  getMetricsContext(): MetricsContext;
+  getMetricsContext?(): MetricsContext;
 }
 
 // ============================================================================

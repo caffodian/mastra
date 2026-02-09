@@ -165,7 +165,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
       methodType: modelMethodType,
       agentId,
       requestContext: result.requestContext!,
-      ...createObservabilityContext({ currentSpan: agentSpan }),
+      tracingContext: createObservabilityContext({ currentSpan: agentSpan }).tracingContext,
       runId,
       toolChoice: result.toolChoice,
       tools: result.tools,
