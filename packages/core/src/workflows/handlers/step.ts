@@ -5,7 +5,7 @@ import type { MastraScorers } from '../../evals';
 import { runScorer } from '../../evals/hooks';
 import type { PubSub } from '../../events/pubsub';
 import { EntityType, SpanType, wrapMastra, createObservabilityContext } from '../../observability';
-import type { ObservabilityContextMixin, TracingContext, Span } from '../../observability';
+import type { ObservabilityContextMixin, Span } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import type { DynamicArgument } from '../../types';
 import { PUBSUB_SYMBOL, STREAM_FORMAT_SYMBOL } from '../constants';
@@ -31,7 +31,7 @@ import {
   validateStepRequestContext,
 } from '../utils';
 
-export interface ExecuteStepParams {
+export interface ExecuteStepParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -54,7 +54,6 @@ export interface ExecuteStepParams {
   outputWriter?: OutputWriter;
   disableScorers?: boolean;
   serializedStepGraph: SerializedStepFlowEntry[];
-  tracingContext: TracingContext;
   iterationCount?: number;
   perStep?: boolean;
 }
@@ -81,6 +80,9 @@ export async function executeStep(
     outputWriter,
     disableScorers,
     serializedStepGraph,
+    tracing,
+    logger,
+    metrics,
     tracingContext,
     iterationCount,
     perStep,
@@ -200,6 +202,9 @@ export async function executeStep(
       startedAt: startTime ?? Date.now(),
       abortController,
       requestContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       outputWriter,
       stepSpan: stepSpan as Span<SpanType.WORKFLOW_STEP> | undefined,

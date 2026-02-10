@@ -348,7 +348,7 @@ export class MastraModelOutput<OUTPUT = undefined> extends MastraBase {
               } = await processorRunner.processPart(
                 chunk,
                 processorStates,
-                options.tracingContext,
+                { tracingContext: options.tracingContext, logger: options.logger, metrics: options.metrics },
                 options.requestContext,
                 self.messageList,
               );
@@ -715,7 +715,7 @@ export class MastraModelOutput<OUTPUT = undefined> extends MastraBase {
 
                   self.messageList = await self.processorRunner.runOutputProcessors(
                     self.messageList,
-                    options.tracingContext,
+                    { tracingContext: options.tracingContext, logger: options.logger, metrics: options.metrics },
                     self.#options.requestContext,
                   );
 

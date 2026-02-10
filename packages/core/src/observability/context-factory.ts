@@ -27,7 +27,7 @@ export function createObservabilityContext(
     tracing,
     logger: loggerContext ?? noOpLoggerContext,
     metrics: metricsContext ?? noOpMetricsContext,
-    tracingContext: tracing, // deprecated alias
+    tracingContext: tracing, // alias — preferred at forwarding sites
   };
 }
 

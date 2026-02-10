@@ -4,7 +4,7 @@ import { MastraError, ErrorDomain, ErrorCategory } from '../error';
 import type { SerializedError } from '../error';
 import { getErrorFromUnknown } from '../error/utils.js';
 import type { PubSub } from '../events/pubsub';
-import type { Span, SpanType, TracingContext, TracingPolicy } from '../observability';
+import type { ObservabilityContextMixin, Span, SpanType, TracingPolicy } from '../observability';
 import { createObservabilityContext } from '../observability';
 import type { ExecutionGraph } from './execution-engine';
 import { ExecutionEngine } from './execution-engine';
@@ -212,27 +212,28 @@ export class DefaultExecutionEngine extends ExecutionEngine {
    * @param params - Parameters for nested workflow execution
    * @returns StepResult if handled, null if should use default execution
    */
-  async executeWorkflowStep(_params: {
-    step: Step<string, any, any>;
-    stepResults: Record<string, StepResult<any, any, any, any>>;
-    executionContext: ExecutionContext;
-    resume?: {
-      steps: string[];
-      resumePayload: any;
-      runId?: string;
-    };
-    timeTravel?: TimeTravelExecutionParams;
-    prevOutput: any;
-    inputData: any;
-    pubsub: PubSub;
-    startedAt: number;
-    abortController: AbortController;
-    requestContext: RequestContext;
-    tracingContext: TracingContext;
-    outputWriter?: OutputWriter;
-    stepSpan?: Span<SpanType.WORKFLOW_STEP>;
-    perStep?: boolean;
-  }): Promise<StepResult<any, any, any, any> | null> {
+  async executeWorkflowStep(
+    _params: ObservabilityContextMixin & {
+      step: Step<string, any, any>;
+      stepResults: Record<string, StepResult<any, any, any, any>>;
+      executionContext: ExecutionContext;
+      resume?: {
+        steps: string[];
+        resumePayload: any;
+        runId?: string;
+      };
+      timeTravel?: TimeTravelExecutionParams;
+      prevOutput: any;
+      inputData: any;
+      pubsub: PubSub;
+      startedAt: number;
+      abortController: AbortController;
+      requestContext: RequestContext;
+      outputWriter?: OutputWriter;
+      stepSpan?: Span<SpanType.WORKFLOW_STEP>;
+      perStep?: boolean;
+    },
+  ): Promise<StepResult<any, any, any, any> | null> {
     // Default: return null to use standard execution
     // Subclasses (like Inngest) override to use platform-specific invocation
     return null;

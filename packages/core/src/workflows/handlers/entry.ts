@@ -1,7 +1,7 @@
 import type { RequestContext } from '../../di';
 import type { SerializedError } from '../../error';
 import type { PubSub } from '../../events/pubsub';
-import type { TracingContext } from '../../observability';
+import type { ObservabilityContextMixin } from '../../observability';
 import type { DefaultExecutionEngine } from '../default';
 import type {
   EntryExecutionResult,
@@ -84,7 +84,7 @@ export async function persistStepUpdate(
   });
 }
 
-export interface ExecuteEntryParams {
+export interface ExecuteEntryParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -101,7 +101,6 @@ export interface ExecuteEntryParams {
     resumePath: number[];
   };
   executionContext: ExecutionContext;
-  tracingContext: TracingContext;
   pubsub: PubSub;
   abortController: AbortController;
   requestContext: RequestContext;
@@ -126,6 +125,9 @@ export async function executeEntry(
     timeTravel,
     resume,
     executionContext,
+    tracing,
+    logger,
+    metrics,
     tracingContext,
     pubsub,
     abortController,
@@ -152,6 +154,9 @@ export async function executeEntry(
       restart,
       resume,
       prevOutput,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -188,6 +193,9 @@ export async function executeEntry(
         activeStepsPath: executionContext.activeStepsPath,
         state: executionContext.state,
       },
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -272,6 +280,9 @@ export async function executeEntry(
       restart,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -292,6 +303,9 @@ export async function executeEntry(
       restart,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -312,6 +326,9 @@ export async function executeEntry(
       restart,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -333,6 +350,9 @@ export async function executeEntry(
       restart,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -387,6 +407,9 @@ export async function executeEntry(
       serializedStepGraph,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,
@@ -491,6 +514,9 @@ export async function executeEntry(
       serializedStepGraph,
       resume,
       executionContext,
+      tracing,
+      logger,
+      metrics,
       tracingContext,
       pubsub,
       abortController,

@@ -513,7 +513,7 @@ export function createLLMExecutionStep<TOOLS extends ToolSet = ToolSet, OUTPUT =
   structuredOutput,
   outputProcessors,
   inputProcessors,
-  logger,
+  mastraLogger: logger,
   agentId,
   downloadRetries,
   downloadConcurrency,

@@ -31,11 +31,11 @@ export function createLLMMappingStep<Tools extends ToolSet = ToolSet, OUTPUT = u
    * 3. Blocking/tripwire works correctly for tool results
    */
   const processorRunner =
-    rest.outputProcessors?.length && rest.logger
+    rest.outputProcessors?.length && rest.mastraLogger
       ? new ProcessorRunner({
           inputProcessors: [],
           outputProcessors: rest.outputProcessors,
-          logger: rest.logger,
+          logger: rest.mastraLogger,
           agentName: 'LLMMappingStep',
           processorStates: rest.processorStates,
         })
@@ -56,7 +56,7 @@ export function createLLMMappingStep<Tools extends ToolSet = ToolSet, OUTPUT = u
       } = await processorRunner.processPart(
         chunk,
         rest.processorStates as Map<string, ProcessorState<OUTPUT>>,
-        tracingContext,
+        { tracingContext },
         rest.requestContext,
         rest.messageList,
       );

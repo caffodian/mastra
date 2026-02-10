@@ -54,7 +54,6 @@ export function createMapResultsStep<OUTPUT = undefined>({
 >['execute'] {
   return async params => {
     const { inputData, bail } = params;
-    const { tracingContext } = resolveObservabilityContext(params);
     const toolsData = inputData['prepare-tools-step'];
     const memoryData = inputData['prepare-memory-step'];
 
@@ -116,7 +115,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
       const modelOutput = await getModelOutputForTripwire<OUTPUT>({
         tripwire: memoryData.tripwire!,
         runId,
-        tracingContext,
+        ...resolveObservabilityContext(params),
         options: options,
         model: agentModel,
         messageList: memoryData.messageList,
@@ -165,7 +164,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
       methodType: modelMethodType,
       agentId,
       requestContext: result.requestContext!,
-      tracingContext: createObservabilityContext({ currentSpan: agentSpan }).tracingContext,
+      ...createObservabilityContext({ currentSpan: agentSpan }),
       runId,
       toolChoice: result.toolChoice,
       tools: result.tools,

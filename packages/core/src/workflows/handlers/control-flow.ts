@@ -3,7 +3,7 @@ import type { RequestContext } from '../../di';
 import { MastraError, ErrorDomain, ErrorCategory, getErrorFromUnknown } from '../../error';
 import type { PubSub } from '../../events/pubsub';
 import { SpanType, createObservabilityContext } from '../../observability';
-import type { TracingContext } from '../../observability';
+import type { ObservabilityContextMixin } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import { selectFields } from '../../utils';
 import { PUBSUB_SYMBOL, STREAM_FORMAT_SYMBOL } from '../constants';
@@ -25,7 +25,7 @@ import type {
 } from '../types';
 import { createDeprecationProxy, runCountDeprecationMessage, getResumeLabelsByStepId } from '../utils';
 
-export interface ExecuteParallelParams {
+export interface ExecuteParallelParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -48,7 +48,6 @@ export interface ExecuteParallelParams {
     resumePath: number[];
   };
   executionContext: ExecutionContext;
-  tracingContext: TracingContext;
   pubsub: PubSub;
   abortController: AbortController;
   requestContext: RequestContext;
@@ -223,7 +222,7 @@ export async function executeParallel(
   return execResults;
 }
 
-export interface ExecuteConditionalParams {
+export interface ExecuteConditionalParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -244,7 +243,6 @@ export interface ExecuteConditionalParams {
   restart?: RestartExecutionParams;
   timeTravel?: TimeTravelExecutionParams;
   executionContext: ExecutionContext;
-  tracingContext: TracingContext;
   pubsub: PubSub;
   abortController: AbortController;
   requestContext: RequestContext;
@@ -519,7 +517,7 @@ export async function executeConditional(
   return execResults;
 }
 
-export interface ExecuteLoopParams {
+export interface ExecuteLoopParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -541,7 +539,6 @@ export interface ExecuteLoopParams {
     resumePath: number[];
   };
   executionContext: ExecutionContext;
-  tracingContext: TracingContext;
   pubsub: PubSub;
   abortController: AbortController;
   requestContext: RequestContext;
@@ -731,7 +728,7 @@ export async function executeLoop(
   return result;
 }
 
-export interface ExecuteForeachParams {
+export interface ExecuteForeachParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   resourceId?: string;
@@ -755,7 +752,6 @@ export interface ExecuteForeachParams {
     forEachIndex?: number;
   };
   executionContext: ExecutionContext;
-  tracingContext: TracingContext;
   pubsub: PubSub;
   abortController: AbortController;
   requestContext: RequestContext;

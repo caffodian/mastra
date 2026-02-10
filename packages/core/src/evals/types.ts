@@ -2,7 +2,7 @@ import type { CoreMessage, CoreSystemMessage } from '@internal/ai-sdk-v4';
 import { z } from 'zod';
 import type { MastraDBMessage } from '../agent';
 import { SpanType } from '../observability';
-import type { TracingContext } from '../observability';
+import type { ObservabilityContextMixin } from '../observability';
 import { dbTimestamps, paginationInfoSchema } from '../storage/domains/shared';
 
 // ============================================================================
@@ -62,9 +62,7 @@ export const scoringInputSchema = z.object({
   // It's added at runtime when needed
 });
 
-export type ScoringInput = z.infer<typeof scoringInputSchema> & {
-  tracingContext?: TracingContext;
-};
+export type ScoringInput = z.infer<typeof scoringInputSchema> & Partial<ObservabilityContextMixin>;
 
 // ============================================================================
 // Scoring Hook Input
@@ -89,9 +87,7 @@ export const scoringHookInputSchema = z.object({
   // Note: tracingContext is not serializable, so we don't include it in the schema
 });
 
-export type ScoringHookInput = z.infer<typeof scoringHookInputSchema> & {
-  tracingContext?: TracingContext;
-};
+export type ScoringHookInput = z.infer<typeof scoringHookInputSchema> & Partial<ObservabilityContextMixin>;
 
 // ============================================================================
 // Extract Step Result
@@ -130,8 +126,7 @@ export type ScoringInputWithExtractStepResult<TExtract = any> = Omit<
   'extractStepResult'
 > & {
   extractStepResult?: TExtract;
-  tracingContext?: TracingContext;
-};
+} & Partial<ObservabilityContextMixin>;
 
 export const scoringInputWithExtractStepResultAndAnalyzeStepResultSchema =
   scoringInputWithExtractStepResultSchema.extend({
@@ -146,8 +141,7 @@ export type ScoringInputWithExtractStepResultAndAnalyzeStepResult<TExtract = any
 > & {
   extractStepResult?: TExtract;
   analyzeStepResult?: TScore;
-  tracingContext?: TracingContext;
-};
+} & Partial<ObservabilityContextMixin>;
 
 export const scoringInputWithExtractStepResultAndScoreAndReasonSchema =
   scoringInputWithExtractStepResultAndAnalyzeStepResultSchema.extend({
@@ -157,9 +151,8 @@ export const scoringInputWithExtractStepResultAndScoreAndReasonSchema =
 
 export type ScoringInputWithExtractStepResultAndScoreAndReason = z.infer<
   typeof scoringInputWithExtractStepResultAndScoreAndReasonSchema
-> & {
-  tracingContext?: TracingContext;
-};
+> &
+  Partial<ObservabilityContextMixin>;
 
 // ============================================================================
 // Score Row Data (stored in DB)

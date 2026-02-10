@@ -1696,7 +1696,7 @@ export class Agent<
       const result = (llm as MastraLLMVNext).stream({
         methodType: 'generate',
         requestContext,
-        tracingContext,
+        ...createObservabilityContext(tracingContext),
         messageList,
         agentId: this.id,
         agentName: this.name,
@@ -1706,7 +1706,7 @@ export class Agent<
     } else {
       const result = await (llm as MastraLLMV1).__text({
         requestContext,
-        tracingContext,
+        ...createObservabilityContext(tracingContext),
         messages: [
           {
             role: 'system',
@@ -1938,7 +1938,7 @@ export class Agent<
         processorStates,
       });
       try {
-        messageList = await runner.runInputProcessors(messageList, tracingContext, requestContext);
+        messageList = await runner.runInputProcessors(messageList, { tracingContext }, requestContext);
       } catch (error) {
         if (error instanceof TripWire) {
           tripwire = {
@@ -1999,7 +1999,7 @@ export class Agent<
       });
 
       try {
-        messageList = await runner.runOutputProcessors(messageList, tracingContext, requestContext);
+        messageList = await runner.runOutputProcessors(messageList, { tracingContext }, requestContext);
       } catch (e) {
         if (e instanceof TripWire) {
           tripwire = {

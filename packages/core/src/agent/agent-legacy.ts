@@ -22,7 +22,7 @@ import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig, StorageThreadType } from '../memory/types';
 import type { Span, TracingContext, TracingOptions, TracingProperties } from '../observability';
-import { EntityType, SpanType, getOrCreateSpan } from '../observability';
+import { EntityType, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
 import type { InputProcessorOrWorkflow, OutputProcessorOrWorkflow } from '../processors/index';
 import { RequestContext, MASTRA_RESOURCE_ID_KEY, MASTRA_THREAD_ID_KEY } from '../request-context';
 import type { ChunkType } from '../stream/types';
@@ -920,7 +920,8 @@ export class AgentLegacyHandler {
     }
 
     const { experimental_output, output, agentSpan, ...llmOptions } = beforeResult;
-    const tracingContext: TracingContext = { currentSpan: agentSpan };
+    const observabilityContext = createObservabilityContext({ currentSpan: agentSpan });
+    const tracingContext = observabilityContext.tracingContext;
 
     // Handle structuredOutput option by creating an StructuredOutputProcessor
     let finalOutputProcessors = mergedGenerateOptions.outputProcessors;
@@ -928,7 +929,7 @@ export class AgentLegacyHandler {
     if (!output || experimental_output) {
       const result = await llmToUse.__text<any, EXPERIMENTAL_OUTPUT>({
         ...llmOptions,
-        tracingContext,
+        ...observabilityContext,
         experimental_output,
       } as any);
 
@@ -1042,7 +1043,7 @@ export class AgentLegacyHandler {
 
     const result = await llmToUse.__textObject<NonNullable<OUTPUT>>({
       ...llmOptions,
-      tracingContext,
+      ...observabilityContext,
       structuredOutput: output as NonNullable<OUTPUT>,
     });
 
@@ -1244,7 +1245,8 @@ export class AgentLegacyHandler {
     const { onFinish, runId, output, experimental_output, agentSpan, messageList, requestContext, ...llmOptions } =
       beforeResult;
     const overrideScorers = mergedStreamOptions.scorers;
-    const tracingContext: TracingContext = { currentSpan: agentSpan };
+    const observabilityContext = createObservabilityContext({ currentSpan: agentSpan });
+    const tracingContext = observabilityContext.tracingContext;
 
     if (!output || experimental_output) {
       this.capabilities.logger.debug(`Starting agent ${this.capabilities.name} llm stream call`, {
@@ -1254,7 +1256,7 @@ export class AgentLegacyHandler {
       const streamResult = llm.__stream({
         ...llmOptions,
         experimental_output,
-        tracingContext,
+        ...observabilityContext,
         requestContext,
         outputProcessors: await this.capabilities.listResolvedOutputProcessors(requestContext),
         onFinish: async result => {
@@ -1299,7 +1301,7 @@ export class AgentLegacyHandler {
 
     const streamObjectResult = llm.__streamObject({
       ...llmOptions,
-      tracingContext,
+      ...observabilityContext,
       requestContext,
       onFinish: async result => {
         try {

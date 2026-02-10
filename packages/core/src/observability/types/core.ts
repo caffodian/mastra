@@ -33,19 +33,40 @@ import type {
  * Mixin interface that provides unified observability access.
  * All execution contexts (tools, workflow steps, processors) extend this
  * to gain access to tracing, logging, and metrics.
+ *
+ * ## Naming conventions
+ *
+ * `tracingContext` is the **source** — it represents your position in the span tree.
+ * Creating a child span produces a new `tracingContext` with that child as `currentSpan`.
+ *
+ * `logger` and `metrics` are **derived** — they are rebuilt from the current span so that
+ * log entries and metric data points are automatically correlated to the active trace:
+ *
+ * ```
+ * tracingContext → create child span → new tracingContext
+ *                                    → new logger  (correlated to child span)
+ *                                    → new metrics (tagged with child span metadata)
+ * ```
+ *
+ * The short names (`tracing`, `logger`, `metrics`) read naturally at **usage sites**:
+ * `tracing.createSpan()`, `logger.info()`, `metrics.record()`.
+ *
+ * The `tracingContext` alias is preferred at **forwarding sites** where the "Context"
+ * suffix clarifies that a structural context object is being passed, not a subsystem.
  */
 export interface ObservabilityContextMixin {
-  /** Tracing context for span operations */
+  /** Tracing context for span creation and tree navigation. */
   tracing: TracingContext;
 
-  /** Logger for structured logging with trace correlation */
+  /** Logger derived from the current span — log entries are trace-correlated. */
   logger: LoggerContext;
 
-  /** Metrics for counters, gauges, histograms */
+  /** Metrics derived from the current span — data points are span-tagged. */
   metrics: MetricsContext;
 
   /**
-   * @deprecated Use `tracing` instead. Will be removed in v2.0.
+   * Alias for `tracing`. Preferred at forwarding sites where the "Context" suffix
+   * clarifies that a structural context object is being passed between functions.
    */
   tracingContext: TracingContext;
 }

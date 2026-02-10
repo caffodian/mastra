@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { RequestContext } from '../../di';
 import type { PubSub } from '../../events/pubsub';
 import { SpanType, createObservabilityContext } from '../../observability';
-import type { TracingContext } from '../../observability';
+import type { ObservabilityContextMixin } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import { PUBSUB_SYMBOL, STREAM_FORMAT_SYMBOL } from '../constants';
 import type { DefaultExecutionEngine } from '../default';
@@ -17,7 +17,7 @@ import type {
   StepResult,
 } from '../types';
 
-export interface ExecuteSleepParams {
+export interface ExecuteSleepParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   serializedStepGraph: SerializedStepFlowEntry[];
@@ -41,7 +41,6 @@ export interface ExecuteSleepParams {
   abortController: AbortController;
   requestContext: RequestContext;
   outputWriter?: OutputWriter;
-  tracingContext: TracingContext;
 }
 
 export async function executeSleep(engine: DefaultExecutionEngine, params: ExecuteSleepParams): Promise<void> {
@@ -138,7 +137,7 @@ export async function executeSleep(engine: DefaultExecutionEngine, params: Execu
   }
 }
 
-export interface ExecuteSleepUntilParams {
+export interface ExecuteSleepUntilParams extends ObservabilityContextMixin {
   workflowId: string;
   runId: string;
   serializedStepGraph: SerializedStepFlowEntry[];
@@ -162,7 +161,6 @@ export interface ExecuteSleepUntilParams {
   abortController: AbortController;
   requestContext: RequestContext;
   outputWriter?: OutputWriter;
-  tracingContext: TracingContext;
 }
 
 export async function executeSleepUntil(

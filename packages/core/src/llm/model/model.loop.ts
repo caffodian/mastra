@@ -170,6 +170,8 @@ export class MastraLLMVNext extends MastraBase {
     processorStates,
     activeTools,
     workspace,
+    logger: observabilityLogger,
+    metrics: observabilityMetrics,
   }: ModelLoopStreamArgs<Tools, OUTPUT>): MastraModelOutput<OUTPUT> {
     let stopWhenToUse;
 
@@ -244,6 +246,8 @@ export class MastraLLMVNext extends MastraBase {
         processorStates,
         activeTools,
         workspace,
+        logger: observabilityLogger,
+        metrics: observabilityMetrics,
         options: {
           ...options,
           onStepFinish: async props => {

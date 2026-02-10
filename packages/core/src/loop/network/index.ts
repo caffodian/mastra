@@ -403,7 +403,11 @@ async function saveMessagesWithProcessors(
   }
 
   // Run output processors on the messages
-  await processorRunner.runOutputProcessors(messageList, context?.tracingContext, context?.requestContext);
+  await processorRunner.runOutputProcessors(
+    messageList,
+    { tracingContext: context?.tracingContext },
+    context?.requestContext,
+  );
 
   // Get the processed messages and save them
   const processedMessages = messageList.get.response.db();
@@ -2130,7 +2134,7 @@ export async function networkLoop<OUTPUT = undefined>({
                 requestContext,
                 messageList,
                 agentId: routingAgent.id,
-                tracingContext: routingAgentOptions?.tracingContext!,
+                ...createObservabilityContext(routingAgentOptions?.tracingContext),
                 structuredOutput: {
                   schema: z.object({
                     resumeData: z.string(),

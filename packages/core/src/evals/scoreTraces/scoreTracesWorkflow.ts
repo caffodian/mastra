@@ -2,7 +2,7 @@ import pMap from 'p-map';
 import z from 'zod';
 import { ErrorCategory, ErrorDomain, MastraError } from '../../error';
 import { InternalSpans, resolveObservabilityContext } from '../../observability';
-import type { TracingContext } from '../../observability';
+import type { ObservabilityContextMixin } from '../../observability';
 import type { SpanRecord, TraceRecord, MastraStorage } from '../../storage';
 import { createStep, createWorkflow } from '../../workflows/evented';
 import type { MastraScorer, ScorerRun } from '../base';
@@ -106,8 +106,7 @@ export async function runScorerOnTarget({
   storage: MastraStorage;
   scorer: MastraScorer;
   target: { traceId: string; spanId?: string };
-  tracingContext: TracingContext;
-}) {
+} & Partial<ObservabilityContextMixin>) {
   // TODO: add storage api to get a single span
   const observabilityStore = await storage.getStore('observability');
   if (!observabilityStore) {
@@ -186,10 +185,9 @@ function buildScorerRun({
   targetSpan,
 }: {
   scorerType?: string;
-  tracingContext: TracingContext;
   trace: TraceRecord;
   targetSpan: SpanRecord;
-}) {
+} & Partial<ObservabilityContextMixin>) {
   let runPayload: ScorerRun;
   if (scorerType === 'agent') {
     const { input, output } = transformTraceToScorerInputAndOutput(trace);

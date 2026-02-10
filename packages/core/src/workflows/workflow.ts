@@ -17,7 +17,7 @@ import type { Event } from '../events/types';
 import { RegisteredLogger } from '../logger';
 import type { Mastra } from '../mastra';
 import type { TracingContext, TracingOptions, TracingPolicy } from '../observability';
-import { EntityType, SpanType, getOrCreateSpan } from '../observability';
+import { EntityType, SpanType, createObservabilityContext, getOrCreateSpan } from '../observability';
 import { ProcessorRunner, ProcessorState } from '../processors';
 import type { Processor, ProcessorStreamWriter } from '../processors';
 import { ProcessorStepOutputSchema, ProcessorStepInputSchema } from '../processors/step-schema';
@@ -715,11 +715,6 @@ function createStepFromProcessor<TProcessorId extends string>(
             })
           : undefined;
 
-      // Create tracing context with processor span so internal agent calls nest correctly
-      const processorTracingContext: TracingContext | undefined = processorSpan
-        ? { currentSpan: processorSpan }
-        : tracingContext;
-
       // Create ProcessorStreamWriter from outputWriter if available
       // This enables processors to stream data-* parts to the UI in real-time
       const processorWriter: ProcessorStreamWriter | undefined = outputWriter
@@ -754,7 +749,9 @@ function createStepFromProcessor<TProcessorId extends string>(
         abort,
         retryCount: retryCount ?? 0,
         requestContext,
-        tracingContext: processorTracingContext,
+        // Rebuild full observability context from processor span so internal agent calls
+        // get trace-correlated logger and metrics alongside proper span nesting
+        ...createObservabilityContext(processorSpan ? { currentSpan: processorSpan } : tracingContext),
         state: processorState,
         writer: processorWriter,
         abortSignal,
@@ -980,18 +977,14 @@ function createStepFromProcessor<TProcessorId extends string>(
                 };
               }
 
-              // Create tracing context with processor span for internal agent calls
-              const processorTracingContext = processorSpan
-                ? { currentSpan: processorSpan }
-                : baseContext.tracingContext;
-
               // Handle outputStream span lifecycle explicitly (not via executePhaseWithSpan)
               // because outputStream uses a per-processor span stored in mutableState
               let result: ChunkType | null | undefined;
               try {
                 result = await processor.processOutputStream({
                   ...baseContext,
-                  tracingContext: processorTracingContext,
+                  // Rebuild full observability context from the per-chunk processor span
+                  ...(processorSpan ? createObservabilityContext({ currentSpan: processorSpan }) : {}),
                   part: part as ChunkType,
                   streamParts: (streamParts ?? []) as ChunkType[],
                   state: mutableState,

@@ -1,5 +1,5 @@
 import { AvailableHooks, executeHook } from '../hooks';
-import type { TracingContext } from '../observability';
+import type { ObservabilityContextMixin } from '../observability';
 import type { MastraScorerEntry } from './base';
 import type { ScoringEntityType, ScoringHookInput, ScoringSource } from './types';
 
@@ -16,6 +16,9 @@ export function runScorer({
   entityType,
   threadId,
   resourceId,
+  tracing,
+  logger,
+  metrics,
   tracingContext,
 }: {
   scorerId: string;
@@ -30,8 +33,7 @@ export function runScorer({
   entityType: ScoringEntityType;
   threadId?: string;
   resourceId?: string;
-  tracingContext?: TracingContext;
-}) {
+} & Partial<ObservabilityContextMixin>) {
   let shouldExecute = false;
 
   if (!scorerObject?.sampling || scorerObject?.sampling?.type === 'none') {
@@ -68,6 +70,9 @@ export function runScorer({
     entityType,
     threadId,
     resourceId,
+    tracing,
+    logger,
+    metrics,
     tracingContext,
   };
 

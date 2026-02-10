@@ -17,7 +17,7 @@ import type { AIV5Type } from '../agent/message-list/types';
 import type { StructuredOutputOptions } from '../agent/types';
 import type { MastraLanguageModel } from '../llm/model/shared.types';
 import type { ScorerResult } from '../loop';
-import type { TracingContext } from '../observability';
+import type { LoggerContext, MetricsContext, TracingContext } from '../observability';
 import type { OutputProcessorOrWorkflow } from '../processors';
 import type { RequestContext } from '../request-context';
 import type { WorkflowRunStatus, WorkflowStepStatus } from '../workflows/types';
@@ -821,6 +821,8 @@ export type MastraModelOutputOptions<OUTPUT = undefined> = {
   isLLMExecutionStep?: boolean;
   returnScorerData?: boolean;
   tracingContext?: TracingContext;
+  logger?: LoggerContext;
+  metrics?: MetricsContext;
   processorStates?: Map<string, any>;
   requestContext?: RequestContext;
 };
