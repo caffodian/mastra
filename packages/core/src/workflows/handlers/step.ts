@@ -5,7 +5,7 @@ import type { MastraScorers } from '../../evals';
 import { runScorer } from '../../evals/hooks';
 import type { PubSub } from '../../events/pubsub';
 import { EntityType, SpanType, wrapMastra, createObservabilityContext } from '../../observability';
-import type { TracingContext, Span } from '../../observability';
+import type { ObservabilityContextMixin, TracingContext, Span } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import type { DynamicArgument } from '../../types';
 import { PUBSUB_SYMBOL, STREAM_FORMAT_SYMBOL } from '../constants';
@@ -520,7 +520,7 @@ export async function executeStep(
   };
 }
 
-export interface RunScorersParams {
+export interface RunScorersParams extends ObservabilityContextMixin {
   engine: DefaultExecutionEngine;
   scorers: DynamicArgument<MastraScorers>;
   runId: string;
@@ -530,7 +530,6 @@ export interface RunScorersParams {
   workflowId: string;
   stepId: string;
   disableScorers?: boolean;
-  tracingContext: TracingContext;
 }
 
 export async function runScorersForStep(params: RunScorersParams): Promise<void> {

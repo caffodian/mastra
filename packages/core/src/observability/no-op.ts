@@ -10,6 +10,7 @@ import type {
   MetricsContext,
   ObservabilityEntrypoint,
   ObservabilityInstance,
+  TracingContext,
 } from './types';
 
 // ============================================================================
@@ -26,6 +27,17 @@ const noOpGauge: Gauge = {
 
 const noOpHistogram: Histogram = {
   record() {},
+};
+
+// ============================================================================
+// No-Op TracingContext
+// ============================================================================
+
+/**
+ * No-op tracing context used when observability is not configured.
+ */
+export const noOpTracingContext: TracingContext = {
+  currentSpan: undefined,
 };
 
 // ============================================================================

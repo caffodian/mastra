@@ -36,6 +36,7 @@ describe('createObservabilityContext', () => {
       info: () => {},
       warn: () => {},
       error: () => {},
+      fatal: () => {},
     };
 
     const ctx = createObservabilityContext(undefined, mockLogger);
@@ -66,6 +67,7 @@ describe('createObservabilityContext', () => {
       info: () => {},
       warn: () => {},
       error: () => {},
+      fatal: () => {},
     };
     const mockMetrics: MetricsContext = {
       counter: () => ({ add: () => {} }),
@@ -87,6 +89,7 @@ describe('noOpLoggerContext', () => {
     expect(typeof noOpLoggerContext.info).toBe('function');
     expect(typeof noOpLoggerContext.warn).toBe('function');
     expect(typeof noOpLoggerContext.error).toBe('function');
+    expect(typeof noOpLoggerContext.fatal).toBe('function');
   });
 
   it('debug does not throw', () => {
@@ -107,6 +110,11 @@ describe('noOpLoggerContext', () => {
   it('error does not throw', () => {
     expect(() => noOpLoggerContext.error('test message')).not.toThrow();
     expect(() => noOpLoggerContext.error('test message', { key: 'value' })).not.toThrow();
+  });
+
+  it('fatal does not throw', () => {
+    expect(() => noOpLoggerContext.fatal('test message')).not.toThrow();
+    expect(() => noOpLoggerContext.fatal('test message', { key: 'value' })).not.toThrow();
   });
 });
 

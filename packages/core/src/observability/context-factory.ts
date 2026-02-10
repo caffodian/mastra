@@ -1,18 +1,7 @@
 // packages/core/src/observability/context-factory.ts
 
-import { noOpLoggerContext, noOpMetricsContext } from './no-op';
+import { noOpLoggerContext, noOpMetricsContext, noOpTracingContext } from './no-op';
 import type { LoggerContext, MetricsContext, ObservabilityContextMixin, TracingContext } from './types';
-
-// ============================================================================
-// No-Op TracingContext
-// ============================================================================
-
-/**
- * No-op tracing context used when observability is not configured.
- */
-const noOpTracingContext: TracingContext = {
-  currentSpan: undefined,
-};
 
 // ============================================================================
 // Context Factory
