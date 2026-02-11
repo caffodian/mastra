@@ -195,10 +195,9 @@ function wrapRun<T extends object>(run: T, tracingContext: TracingContext): T {
         try {
           if (prop === 'start') {
             return (startOptions: any = {}) => {
-              const mixin = createObservabilityContext(startOptions.tracingContext ?? tracingContext);
               return (target as any).start({
                 ...startOptions,
-                ...mixin,
+                ...createObservabilityContext(startOptions.tracingContext ?? tracingContext),
               });
             };
           }

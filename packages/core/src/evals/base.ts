@@ -566,7 +566,6 @@ class MastraScorer<
     observabilityContext: Partial<ObservabilityContextMixin>,
     context: any,
   ) {
-    const { tracingContext } = observabilityContext;
     const originalStep = this.originalPromptObjects.get(scorerStep.name);
     if (!originalStep) {
       throw new Error(`Step "${scorerStep.name}" is not a prompt object`);
@@ -610,12 +609,12 @@ class MastraScorer<
           structuredOutput: {
             schema,
           },
-          tracingContext,
+          ...observabilityContext,
         });
       } else {
         result = await judge.generateLegacy(prompt, {
           output: schema,
-          tracingContext,
+          ...observabilityContext,
         });
       }
       return { result: result.object.score, prompt };
@@ -624,9 +623,9 @@ class MastraScorer<
     } else if (scorerStep.name === 'generateReason') {
       let result;
       if (isSupportedLanguageModel(resolvedModel)) {
-        result = await judge.generate(prompt, { tracingContext });
+        result = await judge.generate(prompt, { ...observabilityContext });
       } else {
-        result = await judge.generateLegacy(prompt, { tracingContext });
+        result = await judge.generateLegacy(prompt, { ...observabilityContext });
       }
       return { result: result.text, prompt };
     } else {
@@ -637,12 +636,12 @@ class MastraScorer<
           structuredOutput: {
             schema: promptStep.outputSchema,
           },
-          tracingContext,
+          ...observabilityContext,
         });
       } else {
         result = await judge.generateLegacy(prompt, {
           output: promptStep.outputSchema,
-          tracingContext,
+          ...observabilityContext,
         });
       }
       return { result: result.object, prompt };

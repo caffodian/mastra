@@ -1,6 +1,7 @@
 import type { RequestContext } from '../../di';
 import type { SerializedError } from '../../error';
 import type { PubSub } from '../../events/pubsub';
+import { resolveObservabilityContext } from '../../observability';
 import type { ObservabilityContextMixin } from '../../observability';
 import type { DefaultExecutionEngine } from '../default';
 import type {
@@ -125,10 +126,6 @@ export async function executeEntry(
     timeTravel,
     resume,
     executionContext,
-    tracing,
-    loggerVNext,
-    metrics,
-    tracingContext,
     pubsub,
     abortController,
     requestContext,
@@ -136,7 +133,7 @@ export async function executeEntry(
     disableScorers,
     perStep,
   } = params;
-  const observabilityContext = { tracing, loggerVNext, metrics, tracingContext };
+  const observabilityContext = resolveObservabilityContext(params);
 
   const prevOutput = engine.getStepOutput(stepResults, prevStep);
   let execResults: any;

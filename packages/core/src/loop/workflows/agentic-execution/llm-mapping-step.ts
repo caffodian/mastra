@@ -2,6 +2,7 @@ import type { ToolSet } from '@internal/ai-sdk-v5';
 import z from 'zod';
 import { supportedLanguageModelSpecifications } from '../../../agent/utils';
 import type { MastraDBMessage } from '../../../memory';
+import { createObservabilityContext } from '../../../observability';
 import type { ProcessorState } from '../../../processors';
 import { ProcessorRunner } from '../../../processors/runner';
 import { convertMastraChunkToAISDKv5 } from '../../../stream/aisdk/v5/transform';
@@ -41,8 +42,8 @@ export function createLLMMappingStep<Tools extends ToolSet = ToolSet, OUTPUT = u
         })
       : undefined;
 
-  // Get tracing context from modelSpanTracker if available
-  const tracingContext = rest.modelSpanTracker?.getTracingContext();
+  // Build full observability context from modelSpanTracker's tracing context
+  const observabilityContext = createObservabilityContext(rest.modelSpanTracker?.getTracingContext());
 
   // Helper function to process a chunk through output processors and enqueue it
   async function processAndEnqueueChunk(chunk: ChunkType<OUTPUT>): Promise<void> {
@@ -56,7 +57,7 @@ export function createLLMMappingStep<Tools extends ToolSet = ToolSet, OUTPUT = u
       } = await processorRunner.processPart(
         chunk,
         rest.processorStates as Map<string, ProcessorState<OUTPUT>>,
-        { tracingContext },
+        observabilityContext,
         rest.requestContext,
         rest.messageList,
       );

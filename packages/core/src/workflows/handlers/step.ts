@@ -4,7 +4,13 @@ import { MastraError, ErrorDomain, ErrorCategory, getErrorFromUnknown } from '..
 import type { MastraScorers } from '../../evals';
 import { runScorer } from '../../evals/hooks';
 import type { PubSub } from '../../events/pubsub';
-import { EntityType, SpanType, wrapMastra, createObservabilityContext } from '../../observability';
+import {
+  EntityType,
+  SpanType,
+  wrapMastra,
+  createObservabilityContext,
+  resolveObservabilityContext,
+} from '../../observability';
 import type { ObservabilityContextMixin, Span } from '../../observability';
 import { ToolStream } from '../../tools/stream';
 import type { DynamicArgument } from '../../types';
@@ -80,14 +86,10 @@ export async function executeStep(
     outputWriter,
     disableScorers,
     serializedStepGraph,
-    tracing,
-    loggerVNext,
-    metrics,
-    tracingContext,
     iterationCount,
     perStep,
   } = params;
-  const observabilityContext = { tracing, loggerVNext, metrics, tracingContext };
+  const observabilityContext = resolveObservabilityContext(params);
 
   const stepCallId = randomUUID();
 
@@ -149,7 +151,7 @@ export async function executeStep(
   executionContext.activeStepsPath[step.id] = executionContext.executionPath;
 
   const stepSpan = await engine.createStepSpan({
-    parentSpan: tracingContext.currentSpan,
+    parentSpan: observabilityContext.tracingContext.currentSpan,
     stepId: step.id,
     operationId: `workflow.${workflowId}.run.${runId}.step.${step.id}.span.start`,
     options: {
@@ -536,22 +538,8 @@ export interface RunScorersParams extends ObservabilityContextMixin {
 }
 
 export async function runScorersForStep(params: RunScorersParams): Promise<void> {
-  const {
-    engine,
-    scorers,
-    runId,
-    input,
-    output,
-    workflowId,
-    stepId,
-    requestContext,
-    disableScorers,
-    tracing,
-    loggerVNext,
-    metrics,
-    tracingContext,
-  } = params;
-  const observabilityContext = { tracing, loggerVNext, metrics, tracingContext };
+  const { engine, scorers, runId, input, output, workflowId, stepId, requestContext, disableScorers } = params;
+  const observabilityContext = resolveObservabilityContext(params);
 
   let scorersToUse = scorers;
   if (typeof scorersToUse === 'function') {
