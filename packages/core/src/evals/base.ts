@@ -7,7 +7,7 @@ import { resolveModelConfig } from '../llm/model/resolve-model';
 import type { MastraModelConfig } from '../llm/model/shared.types';
 import type { Mastra } from '../mastra';
 import { InternalSpans, resolveObservabilityContext } from '../observability';
-import type { TracingContext } from '../observability';
+import type { ObservabilityContextMixin } from '../observability';
 import { createWorkflow, createStep } from '../workflows';
 import type { ScoringSamplingConfig, ScorerRunInputForAgent, ScorerRunOutputForAgent } from './types';
 
@@ -46,13 +46,12 @@ interface ScorerConfig<TID extends string, TInput = any, TRunOutput = any> {
 }
 
 // Standardized input type for all pipelines
-interface ScorerRun<TInput = any, TOutput = any> {
+interface ScorerRun<TInput = any, TOutput = any> extends Partial<ObservabilityContextMixin> {
   runId?: string;
   input?: TInput;
   output: TOutput;
   groundTruth?: any;
   requestContext?: Record<string, any>;
-  tracingContext?: TracingContext;
 }
 
 // Prompt object definition with conditional typing
@@ -478,7 +477,7 @@ class MastraScorer<
         outputSchema: z.any(),
         execute: async params => {
           const { inputData, getInitData } = params;
-          const { tracingContext } = resolveObservabilityContext(params);
+          const observabilityContext = resolveObservabilityContext(params);
           const { accumulatedResults = {}, generatedPrompts = {} } = inputData;
           const { run } = getInitData<{ run: ScorerRun<TInput, TRunOutput> }>();
 
@@ -487,7 +486,7 @@ class MastraScorer<
           let stepResult;
           let newGeneratedPrompts = generatedPrompts;
           if (scorerStep.isPromptObject) {
-            const { result, prompt } = await this.executePromptStep(scorerStep, tracingContext, context);
+            const { result, prompt } = await this.executePromptStep(scorerStep, observabilityContext, context);
             stepResult = result;
             newGeneratedPrompts = {
               ...generatedPrompts,
@@ -562,7 +561,12 @@ class MastraScorer<
     return await scorerStep.definition(context);
   }
 
-  private async executePromptStep(scorerStep: ScorerStepDefinition, tracingContext: TracingContext, context: any) {
+  private async executePromptStep(
+    scorerStep: ScorerStepDefinition,
+    observabilityContext: Partial<ObservabilityContextMixin>,
+    context: any,
+  ) {
+    const { tracingContext } = observabilityContext;
     const originalStep = this.originalPromptObjects.get(scorerStep.name);
     if (!originalStep) {
       throw new Error(`Step "${scorerStep.name}" is not a prompt object`);

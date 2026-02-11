@@ -2,6 +2,7 @@ import { generateId } from '@internal/ai-sdk-v5';
 import type { ToolSet } from '@internal/ai-sdk-v5';
 import { ErrorCategory, ErrorDomain, MastraError } from '../error';
 import { ConsoleLogger } from '../logger';
+import { createObservabilityContext } from '../observability';
 import type { ProcessorState } from '../processors';
 import { createDestructurableOutput, MastraModelOutput } from '../stream/base/output';
 import type { LoopOptions, LoopRun, StreamInternal } from './types';
@@ -144,9 +145,7 @@ export function loop<Tools extends ToolSet = ToolSet, OUTPUT = undefined>({
       structuredOutput: rest.structuredOutput,
       outputProcessors,
       returnScorerData,
-      tracingContext: rest.modelSpanTracker?.getTracingContext(),
-      loggerVNext: rest.loggerVNext,
-      metrics: rest.metrics,
+      ...createObservabilityContext(rest.modelSpanTracker?.getTracingContext()),
       requestContext: rest.requestContext,
       processorStates,
     },

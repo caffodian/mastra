@@ -24,7 +24,7 @@ const getTraceStep = createStep({
   outputSchema: z.any(),
   execute: async params => {
     const { inputData, mastra } = params;
-    const { tracingContext } = resolveObservabilityContext(params);
+    const observabilityContext = resolveObservabilityContext(params);
     const logger = mastra.getLogger();
     if (!logger) {
       console.warn(
@@ -73,7 +73,7 @@ const getTraceStep = createStep({
       inputData.targets,
       async target => {
         try {
-          await runScorerOnTarget({ storage, scorer, target, tracingContext });
+          await runScorerOnTarget({ storage, scorer, target, ...observabilityContext });
         } catch (error) {
           const mastraError = new MastraError(
             {
@@ -101,7 +101,7 @@ export async function runScorerOnTarget({
   storage,
   scorer,
   target,
-  tracingContext,
+  ...observabilityContext
 }: {
   storage: MastraStorage;
   scorer: MastraScorer;
@@ -137,7 +137,7 @@ export async function runScorerOnTarget({
 
   const scorerRun = buildScorerRun({
     scorerType: scorer.type === 'agent' ? 'agent' : undefined,
-    tracingContext,
+    ...observabilityContext,
     trace,
     targetSpan: span,
   });
@@ -180,27 +180,19 @@ async function validateAndSaveScore({ storage, scorerResult }: { storage: Mastra
 
 function buildScorerRun({
   scorerType,
-  tracingContext,
   trace,
   targetSpan,
+  ...observabilityContext
 }: {
   scorerType?: string;
   trace: TraceRecord;
   targetSpan: SpanRecord;
-} & Partial<ObservabilityContextMixin>) {
-  let runPayload: ScorerRun;
+} & Partial<ObservabilityContextMixin>): ScorerRun {
   if (scorerType === 'agent') {
     const { input, output } = transformTraceToScorerInputAndOutput(trace);
-    runPayload = {
-      input,
-      output,
-    };
-  } else {
-    runPayload = { input: targetSpan.input, output: targetSpan.output };
+    return { input, output, ...observabilityContext };
   }
-
-  runPayload.tracingContext = tracingContext;
-  return runPayload;
+  return { input: targetSpan.input, output: targetSpan.output, ...observabilityContext };
 }
 
 async function attachScoreToSpan({

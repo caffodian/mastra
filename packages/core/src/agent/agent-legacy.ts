@@ -21,7 +21,13 @@ import type { MastraModelConfig, TripwireProperties } from '../llm/model/shared.
 import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig, StorageThreadType } from '../memory/types';
-import type { Span, TracingContext, TracingOptions, TracingProperties } from '../observability';
+import type {
+  ObservabilityContextMixin,
+  Span,
+  TracingContext,
+  TracingOptions,
+  TracingProperties,
+} from '../observability';
 import { EntityType, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
 import type { InputProcessorOrWorkflow, OutputProcessorOrWorkflow } from '../processors/index';
 import { RequestContext, MASTRA_RESOURCE_ID_KEY, MASTRA_THREAD_ID_KEY } from '../request-context';
@@ -85,26 +91,28 @@ export interface AgentLegacyCapabilities {
     requestContext: RequestContext;
   }): Promise<{ messages: MastraDBMessage[] }>;
   /** Convert tools for LLM */
-  convertTools(args: {
-    toolsets?: ToolsetsInput;
-    clientTools?: ToolsInput;
-    threadId?: string;
-    resourceId?: string;
-    runId?: string;
-    requestContext: RequestContext;
-    tracingContext?: TracingContext;
-    writableStream?: WritableStream<ChunkType>;
-    methodType: AgentMethodType;
-    memoryConfig?: MemoryConfig;
-  }): Promise<Record<string, CoreTool>>;
+  convertTools(
+    args: {
+      toolsets?: ToolsetsInput;
+      clientTools?: ToolsInput;
+      threadId?: string;
+      resourceId?: string;
+      runId?: string;
+      requestContext: RequestContext;
+      writableStream?: WritableStream<ChunkType>;
+      methodType: AgentMethodType;
+      memoryConfig?: MemoryConfig;
+    } & Partial<ObservabilityContextMixin>,
+  ): Promise<Record<string, CoreTool>>;
 
   /** Run input processors */
-  __runInputProcessors(args: {
-    requestContext: RequestContext;
-    tracingContext: TracingContext;
-    messageList: MessageList;
-    inputProcessorOverrides?: InputProcessorOrWorkflow[];
-  }): Promise<{
+  __runInputProcessors(
+    args: {
+      requestContext: RequestContext;
+      messageList: MessageList;
+      inputProcessorOverrides?: InputProcessorOrWorkflow[];
+    } & Partial<ObservabilityContextMixin>,
+  ): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -121,7 +129,7 @@ export interface AgentLegacyCapabilities {
   genTitle(
     userMessage: UIMessage | UIMessageWithMetadata,
     requestContext: RequestContext,
-    tracingContext: TracingContext,
+    observabilityContext: Partial<ObservabilityContextMixin>,
     titleModel?: DynamicArgument<MastraModelConfig>,
     titleInstructions?: DynamicArgument<string>,
   ): Promise<string | undefined>;
@@ -147,12 +155,13 @@ export interface AgentLegacyCapabilities {
   /** List resolved output processors */
   listResolvedOutputProcessors(requestContext?: RequestContext): Promise<OutputProcessorOrWorkflow[]>;
   /** Run output processors */
-  __runOutputProcessors(args: {
-    requestContext: RequestContext;
-    tracingContext: TracingContext;
-    messageList: MessageList;
-    outputProcessorOverrides?: OutputProcessorOrWorkflow[];
-  }): Promise<{
+  __runOutputProcessors(
+    args: {
+      requestContext: RequestContext;
+      messageList: MessageList;
+      outputProcessorOverrides?: OutputProcessorOrWorkflow[];
+    } & Partial<ObservabilityContextMixin>,
+  ): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -162,16 +171,17 @@ export interface AgentLegacyCapabilities {
     };
   }>;
   /** Run scorers */
-  runScorers(args: {
-    messageList: MessageList;
-    runId: string;
-    requestContext: RequestContext;
-    structuredOutput?: boolean;
-    overrideScorers?: Record<string, any>;
-    threadId?: string;
-    resourceId?: string;
-    tracingContext: TracingContext;
-  }): Promise<void>;
+  runScorers(
+    args: {
+      messageList: MessageList;
+      runId: string;
+      requestContext: RequestContext;
+      structuredOutput?: boolean;
+      overrideScorers?: Record<string, any>;
+      threadId?: string;
+      resourceId?: string;
+    } & Partial<ObservabilityContextMixin>,
+  ): Promise<void>;
 }
 
 /**
@@ -251,7 +261,7 @@ export class AgentLegacyHandler {
           mastra: this.capabilities.mastra,
         });
 
-        const innerTracingContext: TracingContext = { currentSpan: agentSpan };
+        const innerObservabilityContext = createObservabilityContext({ currentSpan: agentSpan });
 
         const memory = await this.capabilities.getMemory({ requestContext });
 
@@ -283,7 +293,7 @@ export class AgentLegacyHandler {
           resourceId,
           runId,
           requestContext,
-          tracingContext: innerTracingContext,
+          ...innerObservabilityContext,
           writableStream,
           methodType: methodType === 'generate' ? 'generateLegacy' : 'streamLegacy',
           memoryConfig,
@@ -303,7 +313,7 @@ export class AgentLegacyHandler {
           messageList.add(messages, 'user');
           const { tripwire } = await this.capabilities.__runInputProcessors({
             requestContext,
-            tracingContext: innerTracingContext,
+            ...innerObservabilityContext,
             messageList,
           });
           return {
@@ -386,7 +396,7 @@ export class AgentLegacyHandler {
 
         const { messageList: processedMessageList, tripwire } = await this.capabilities.__runInputProcessors({
           requestContext,
-          tracingContext: innerTracingContext,
+          ...innerObservabilityContext,
           messageList,
         });
         messageList = processedMessageList;
@@ -524,7 +534,13 @@ export class AgentLegacyHandler {
             if (shouldGenerate && !threadExists && userMessage) {
               promises.push(
                 this.capabilities
-                  .genTitle(userMessage, requestContext, { currentSpan: agentSpan }, titleModel, titleInstructions)
+                  .genTitle(
+                    userMessage,
+                    requestContext,
+                    createObservabilityContext({ currentSpan: agentSpan }),
+                    titleModel,
+                    titleInstructions,
+                  )
                   .then(title => {
                     if (title) {
                       return memory.createThread({
@@ -595,7 +611,7 @@ export class AgentLegacyHandler {
           overrideScorers,
           threadId,
           resourceId,
-          tracingContext: { currentSpan: agentSpan },
+          ...createObservabilityContext({ currentSpan: agentSpan }),
         });
 
         const scoringData: {
@@ -921,7 +937,6 @@ export class AgentLegacyHandler {
 
     const { experimental_output, output, agentSpan, ...llmOptions } = beforeResult;
     const observabilityContext = createObservabilityContext({ currentSpan: agentSpan });
-    const tracingContext = observabilityContext.tracingContext;
 
     // Handle structuredOutput option by creating an StructuredOutputProcessor
     let finalOutputProcessors = mergedGenerateOptions.outputProcessors;
@@ -944,7 +959,7 @@ export class AgentLegacyHandler {
 
       const outputProcessorResult = await this.capabilities.__runOutputProcessors({
         requestContext: contextWithMemory || new RequestContext(),
-        tracingContext,
+        ...observabilityContext,
         outputProcessorOverrides: finalOutputProcessors,
         messageList, // Use the full message list with complete conversation history
       });
@@ -1060,7 +1075,7 @@ export class AgentLegacyHandler {
 
     const outputProcessorResult = await this.capabilities.__runOutputProcessors({
       requestContext: contextWithMemory || new RequestContext(),
-      tracingContext,
+      ...observabilityContext,
       messageList, // Use the full message list with complete conversation history
     });
 
@@ -1246,7 +1261,6 @@ export class AgentLegacyHandler {
       beforeResult;
     const overrideScorers = mergedStreamOptions.scorers;
     const observabilityContext = createObservabilityContext({ currentSpan: agentSpan });
-    const tracingContext = observabilityContext.tracingContext;
 
     if (!output || experimental_output) {
       this.capabilities.logger.debug(`Starting agent ${this.capabilities.name} llm stream call`, {
@@ -1266,7 +1280,7 @@ export class AgentLegacyHandler {
             // Run output processors to save messages
             await this.capabilities.__runOutputProcessors({
               requestContext,
-              tracingContext,
+              ...observabilityContext,
               messageList,
             });
 
@@ -1325,7 +1339,7 @@ export class AgentLegacyHandler {
           // Run output processors to save messages
           await this.capabilities.__runOutputProcessors({
             requestContext,
-            tracingContext,
+            ...observabilityContext,
             messageList,
           });
 

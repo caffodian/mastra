@@ -10,7 +10,7 @@ import type { StructuredOutputOptions } from '../../agent/types';
 import { ErrorCategory, ErrorDomain, MastraError } from '../../error';
 import type { MastraLLMVNext } from '../../llm/model/model.loop';
 import { noopLogger } from '../../logger';
-import type { TracingContext } from '../../observability';
+import type { ObservabilityContextMixin, TracingContext } from '../../observability';
 import { createObservabilityContext } from '../../observability';
 import { ProcessorRunner } from '../../processors/runner';
 import type { RequestContext } from '../../request-context';
@@ -341,7 +341,7 @@ export async function prepareMemoryStep({
             .genTitle(
               userMessage,
               requestContext,
-              tracingContext || { currentSpan: undefined },
+              createObservabilityContext(tracingContext),
               titleModel,
               titleInstructions,
             )
@@ -385,9 +385,8 @@ async function saveMessagesWithProcessors(
   messages: MastraDBMessage[],
   processorRunner: ProcessorRunner | null,
   context?: {
-    tracingContext?: TracingContext;
     requestContext?: RequestContext;
-  },
+  } & Partial<ObservabilityContextMixin>,
 ): Promise<void> {
   if (!memory) return;
 
@@ -403,11 +402,8 @@ async function saveMessagesWithProcessors(
   }
 
   // Run output processors on the messages
-  await processorRunner.runOutputProcessors(
-    messageList,
-    { tracingContext: context?.tracingContext },
-    context?.requestContext,
-  );
+  const { requestContext, ...observabilityContext } = context ?? {};
+  await processorRunner.runOutputProcessors(messageList, observabilityContext, requestContext);
 
   // Get the processed messages and save them
   const processedMessages = messageList.get.response.db();

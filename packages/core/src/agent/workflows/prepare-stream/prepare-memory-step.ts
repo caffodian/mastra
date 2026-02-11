@@ -64,7 +64,7 @@ export function createPrepareMemoryStep<OUTPUT = undefined>({
     inputSchema: z.object({}),
     outputSchema: prepareMemoryStepOutputSchema,
     execute: async params => {
-      const { tracingContext } = resolveObservabilityContext(params);
+      const observabilityContext = resolveObservabilityContext(params);
       const thread = threadFromArgs;
       const messageList = new MessageList({
         threadId: thread?.id,
@@ -90,7 +90,7 @@ export function createPrepareMemoryStep<OUTPUT = undefined>({
         messageList.add(options.messages, 'input');
         const { tripwire } = await capabilities.runInputProcessors({
           requestContext,
-          tracingContext,
+          ...observabilityContext,
           messageList,
           inputProcessorOverrides: options.inputProcessors,
           processorStates,
@@ -174,7 +174,7 @@ export function createPrepareMemoryStep<OUTPUT = undefined>({
 
       const { tripwire } = await capabilities.runInputProcessors({
         requestContext,
-        tracingContext,
+        ...observabilityContext,
         messageList,
         inputProcessorOverrides: options.inputProcessors,
         processorStates,

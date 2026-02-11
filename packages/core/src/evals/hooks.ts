@@ -16,10 +16,7 @@ export function runScorer({
   entityType,
   threadId,
   resourceId,
-  tracing,
-  loggerVNext,
-  metrics,
-  tracingContext,
+  ...observabilityContext
 }: {
   scorerId: string;
   scorerObject: MastraScorerEntry;
@@ -70,10 +67,7 @@ export function runScorer({
     entityType,
     threadId,
     resourceId,
-    tracing,
-    loggerVNext,
-    metrics,
-    tracingContext,
+    ...observabilityContext,
   };
 
   executeHook(AvailableHooks.ON_SCORER_RUN, payload);

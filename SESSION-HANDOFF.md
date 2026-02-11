@@ -79,6 +79,7 @@ tracingContext → create child span → new tracingContext
 ## All Modified Files (Current State)
 
 ### Core observability types and factory
+
 - `packages/core/src/observability/types/core.ts` — `ObservabilityContextMixin` with `loggerVNext`
 - `packages/core/src/observability/context-factory.ts` — factory returns `loggerVNext` field
 - `packages/core/src/observability/context-factory.test.ts` — tests use `ctx.loggerVNext`
@@ -86,6 +87,7 @@ tracingContext → create child span → new tracingContext
 - `packages/core/src/observability/index.ts` — barrel exports
 
 ### Loop system
+
 - `packages/core/src/loop/types.ts` — `logger: IMastraLogger` (kept as-is), `& Partial<ObservabilityContextMixin>`
 - `packages/core/src/loop/loop.ts` — passes `loggerVNext` from mixin to `MastraModelOutput`
 - `packages/core/src/loop/workflows/agentic-execution/llm-execution-step.ts` — destructures `logger` (IMastraLogger)
@@ -94,31 +96,37 @@ tracingContext → create child span → new tracingContext
 - `packages/core/src/loop/network/index.ts` — inlined `createObservabilityContext` spread
 
 ### LLM types (mixin usage)
+
 - `packages/core/src/llm/model/model.loop.types.ts` — `& ObservabilityContextMixin`, Omit uses `'logger'`
 - `packages/core/src/llm/model/model.loop.ts` — destructures `loggerVNext: observabilityLogger`
 - `packages/core/src/llm/model/base.types.ts` — `ObservabilityContextMixin &` (v4 AI SDK)
 - `packages/core/src/llm/index.ts` — `ObservabilityContextMixin &` (v5 AI SDK)
 
 ### Stream/processor system
+
 - `packages/core/src/stream/types.ts` — `MastraModelOutputOptions` uses `loggerVNext`/`metrics`
 - `packages/core/src/stream/base/output.ts` — passes `loggerVNext`/`metrics` to processor calls
 - `packages/core/src/processors/runner.ts` — `ProcessorObservabilityContext` with `loggerVNext`/`metrics`
 
 ### Agent system
+
 - `packages/core/src/agent/agent.ts` — inlined `createObservabilityContext` spreads
 - `packages/core/src/agent/agent-legacy.ts` — uses `observabilityContext` variable (multi-use)
 - `packages/core/src/agent/workflows/prepare-stream/map-results-step.ts` — inlined spreads
 
 ### Workflow system
+
 - `packages/core/src/workflows/workflow.ts` — processor sites use `createObservabilityContext()`
 - `packages/core/src/workflows/evented/workflow.ts` — processor sites use `createObservabilityContext()`
 - `packages/core/src/workflows/handlers/entry.ts` — passes `loggerVNext` through entry execution
 - `packages/core/src/workflows/handlers/step.ts` — passes `loggerVNext` through step execution
 
 ### Evals system
+
 - `packages/core/src/evals/hooks.ts` — passes `loggerVNext` in scorer hook payload
 
 ### Mastra class
+
 - `packages/core/src/mastra/index.ts` — `get loggerVNext(): LoggerContext` and `get metrics(): MetricsContext` getters
 
 ---

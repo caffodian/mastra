@@ -32,7 +32,7 @@ import { networkLoop } from '../loop/network';
 import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig } from '../memory/types';
-import type { TracingContext, TracingProperties } from '../observability';
+import type { ObservabilityContextMixin, TracingContext, TracingProperties } from '../observability';
 import { EntityType, InternalSpans, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
 import type {
   InputProcessorOrWorkflow,
@@ -1633,16 +1633,15 @@ export class Agent<
   async generateTitleFromUserMessage({
     message,
     requestContext = new RequestContext(),
-    tracingContext,
     model,
     instructions,
+    ...observabilityContext
   }: {
     message: string | MessageInput;
     requestContext?: RequestContext;
-    tracingContext: TracingContext;
     model?: DynamicArgument<MastraModelConfig>;
     instructions?: DynamicArgument<string>;
-  }) {
+  } & Partial<ObservabilityContextMixin>) {
     // need to use text, not object output or it will error for models that don't support structured output (eg Deepseek R1)
     const llm = await this.getLLM({ requestContext, model });
 
@@ -1696,7 +1695,7 @@ export class Agent<
       const result = (llm as MastraLLMVNext).stream({
         methodType: 'generate',
         requestContext,
-        ...createObservabilityContext(tracingContext),
+        ...observabilityContext,
         messageList,
         agentId: this.id,
         agentName: this.name,
@@ -1706,7 +1705,7 @@ export class Agent<
     } else {
       const result = await (llm as MastraLLMV1).__text({
         requestContext,
-        ...createObservabilityContext(tracingContext),
+        ...observabilityContext,
         messages: [
           {
             role: 'system',
@@ -1735,7 +1734,7 @@ export class Agent<
   async genTitle(
     userMessage: string | MessageInput | undefined,
     requestContext: RequestContext,
-    tracingContext: TracingContext,
+    observabilityContext: Partial<ObservabilityContextMixin>,
     model?: DynamicArgument<MastraModelConfig>,
     instructions?: DynamicArgument<string>,
   ) {
@@ -1746,7 +1745,7 @@ export class Agent<
           return await this.generateTitleFromUserMessage({
             message: normMessage,
             requestContext,
-            tracingContext,
+            ...observabilityContext,
             model,
             instructions,
           });
@@ -1910,17 +1909,16 @@ export class Agent<
    */
   private async __runInputProcessors({
     requestContext,
-    tracingContext,
     messageList,
     inputProcessorOverrides,
     processorStates,
+    ...observabilityContext
   }: {
     requestContext: RequestContext;
-    tracingContext: TracingContext;
     messageList: MessageList;
     inputProcessorOverrides?: InputProcessorOrWorkflow[];
     processorStates?: Map<string, ProcessorState>;
-  }): Promise<{
+  } & Partial<ObservabilityContextMixin>): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -1938,7 +1936,7 @@ export class Agent<
         processorStates,
       });
       try {
-        messageList = await runner.runInputProcessors(messageList, { tracingContext }, requestContext);
+        messageList = await runner.runInputProcessors(messageList, observabilityContext, requestContext);
       } catch (error) {
         if (error instanceof TripWire) {
           tripwire = {
@@ -1973,15 +1971,14 @@ export class Agent<
    */
   private async __runOutputProcessors({
     requestContext,
-    tracingContext,
     messageList,
     outputProcessorOverrides,
+    ...observabilityContext
   }: {
     requestContext: RequestContext;
-    tracingContext: TracingContext;
     messageList: MessageList;
     outputProcessorOverrides?: OutputProcessorOrWorkflow[];
-  }): Promise<{
+  } & Partial<ObservabilityContextMixin>): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -1999,7 +1996,7 @@ export class Agent<
       });
 
       try {
-        messageList = await runner.runOutputProcessors(messageList, { tracingContext }, requestContext);
+        messageList = await runner.runOutputProcessors(messageList, observabilityContext, requestContext);
       } catch (e) {
         if (e instanceof TripWire) {
           tripwire = {
@@ -2964,7 +2961,7 @@ export class Agent<
     overrideScorers,
     threadId,
     resourceId,
-    tracingContext,
+    ...observabilityContext
   }: {
     messageList: MessageList;
     runId: string;
@@ -2975,8 +2972,7 @@ export class Agent<
       | Record<string, { scorer: MastraScorer['name']; sampling?: ScoringSamplingConfig }>;
     threadId?: string;
     resourceId?: string;
-    tracingContext: TracingContext;
-  }) {
+  } & Partial<ObservabilityContextMixin>) {
     let scorers: Record<string, { scorer: MastraScorer; sampling?: ScoringSamplingConfig }> = {};
     try {
       scorers = overrideScorers
@@ -3014,7 +3010,7 @@ export class Agent<
           structuredOutput: !!structuredOutput,
           threadId,
           resourceId,
-          tracingContext,
+          ...observabilityContext,
         });
       }
     }
@@ -3459,7 +3455,7 @@ export class Agent<
             const title = await this.genTitle(
               userMessage,
               requestContext,
-              { currentSpan: agentSpan },
+              createObservabilityContext({ currentSpan: agentSpan }),
               titleModel,
               titleInstructions,
             );

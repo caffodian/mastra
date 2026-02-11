@@ -87,6 +87,7 @@ export async function executeStep(
     iterationCount,
     perStep,
   } = params;
+  const observabilityContext = { tracing, loggerVNext, metrics, tracingContext };
 
   const stepCallId = randomUUID();
 
@@ -202,10 +203,7 @@ export async function executeStep(
       startedAt: startTime ?? Date.now(),
       abortController,
       requestContext,
-      tracing,
-      loggerVNext,
-      metrics,
-      tracingContext,
+      ...observabilityContext,
       outputWriter,
       stepSpan: stepSpan as Span<SpanType.WORKFLOW_STEP> | undefined,
       perStep,
@@ -538,8 +536,22 @@ export interface RunScorersParams extends ObservabilityContextMixin {
 }
 
 export async function runScorersForStep(params: RunScorersParams): Promise<void> {
-  const { engine, scorers, runId, input, output, workflowId, stepId, requestContext, disableScorers, tracingContext } =
-    params;
+  const {
+    engine,
+    scorers,
+    runId,
+    input,
+    output,
+    workflowId,
+    stepId,
+    requestContext,
+    disableScorers,
+    tracing,
+    loggerVNext,
+    metrics,
+    tracingContext,
+  } = params;
+  const observabilityContext = { tracing, loggerVNext, metrics, tracingContext };
 
   let scorersToUse = scorers;
   if (typeof scorersToUse === 'function') {
@@ -583,7 +595,7 @@ export async function runScorersForStep(params: RunScorersParams): Promise<void>
         structuredOutput: true,
         source: 'LIVE',
         entityType: 'WORKFLOW',
-        tracingContext,
+        ...observabilityContext,
       });
     }
   }

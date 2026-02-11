@@ -17,7 +17,7 @@ import type { AIV5Type } from '../agent/message-list/types';
 import type { StructuredOutputOptions } from '../agent/types';
 import type { MastraLanguageModel } from '../llm/model/shared.types';
 import type { ScorerResult } from '../loop';
-import type { LoggerContext, MetricsContext, TracingContext } from '../observability';
+import type { ObservabilityContextMixin } from '../observability';
 import type { OutputProcessorOrWorkflow } from '../processors';
 import type { RequestContext } from '../request-context';
 import type { WorkflowRunStatus, WorkflowStepStatus } from '../workflows/types';
@@ -820,12 +820,9 @@ export type MastraModelOutputOptions<OUTPUT = undefined> = {
   outputProcessors?: OutputProcessorOrWorkflow[];
   isLLMExecutionStep?: boolean;
   returnScorerData?: boolean;
-  tracingContext?: TracingContext;
-  loggerVNext?: LoggerContext;
-  metrics?: MetricsContext;
   processorStates?: Map<string, any>;
   requestContext?: RequestContext;
-};
+} & Partial<ObservabilityContextMixin>;
 
 /**
  * Tripwire data attached to a step when a processor triggers a tripwire.
