@@ -36,7 +36,7 @@ export function createToolCallStep<Tools extends ToolSet = ToolSet, OUTPUT = und
   streamState,
   modelSpanTracker,
   _internal,
-  mastraLogger: logger,
+  logger,
 }: OuterLLMRun<Tools, OUTPUT>) {
   return createStep({
     id: 'toolCallStep',

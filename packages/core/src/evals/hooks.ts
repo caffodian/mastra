@@ -17,7 +17,7 @@ export function runScorer({
   threadId,
   resourceId,
   tracing,
-  logger,
+  loggerVNext,
   metrics,
   tracingContext,
 }: {
@@ -71,7 +71,7 @@ export function runScorer({
     threadId,
     resourceId,
     tracing,
-    logger,
+    loggerVNext,
     metrics,
     tracingContext,
   };

@@ -821,7 +821,7 @@ export type MastraModelOutputOptions<OUTPUT = undefined> = {
   isLLMExecutionStep?: boolean;
   returnScorerData?: boolean;
   tracingContext?: TracingContext;
-  logger?: LoggerContext;
+  loggerVNext?: LoggerContext;
   metrics?: MetricsContext;
   processorStates?: Map<string, any>;
   requestContext?: RequestContext;

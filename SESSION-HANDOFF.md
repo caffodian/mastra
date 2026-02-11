@@ -1,9 +1,10 @@
 # Session Handoff: ObservabilityContextMixin Migration
 
 **Branch:** `esp/obs_core_additions`
-**Commit (at sync):** `0b9c466f9bba4947f9bcd0aa95bbd99f350ae270`
-**Date:** 2026-02-10
+**Commit (at sync):** `a94eda1aa4e8092c39bd368324956e9a9a477923`
+**Date:** 2026-02-11
 **Scope:** `packages/core/src/` only
+**PR:** https://github.com/mastra-ai/mastra/pull/12839
 
 ---
 
@@ -14,7 +15,7 @@ Multi-phase migration from standalone `tracingContext: TracingContext` to the fu
 ### Phase Summary
 
 1. **Created `ObservabilityContextMixin`** in `packages/core/src/observability/types/core.ts`
-   - Fields: `tracing: TracingContext`, `logger: LoggerContext`, `metrics: MetricsContext`, `tracingContext: TracingContext` (alias)
+   - Fields: `tracing: TracingContext`, `loggerVNext: LoggerContext`, `metrics: MetricsContext`, `tracingContext: TracingContext` (alias)
 
 2. **Created factory functions** in `packages/core/src/observability/context-factory.ts`
    - `createObservabilityContext(tracingContext?, loggerContext?, metricsContext?)` — fills no-op defaults
@@ -23,12 +24,13 @@ Multi-phase migration from standalone `tracingContext: TracingContext` to the fu
 3. **Migrated all internal interfaces** to use the mixin:
    - Tool execute params, workflow step handlers, eval callbacks, agent internals, LLM types
 
-4. **Renamed `logger: IMastraLogger` to `mastraLogger: IMastraLogger`** in loop system types:
-   - `LoopOptions`, destructured as `mastraLogger: logger` (alias) in function bodies to minimize churn
-   - This freed up `logger` for `LoggerContext` from the mixin
+4. **Used `loggerVNext` naming** (VNext pattern) to avoid conflict with `logger: IMastraLogger`:
+   - The mixin field is `loggerVNext: LoggerContext`
+   - The existing `logger: IMastraLogger` in `LoopOptions`, `MastraPrimitives`, etc. is unchanged
+   - No `mastraLogger` rename was needed — `loggerVNext` eliminates the collision entirely
 
 5. **Replaced individual fields with mixin** on internal types:
-   - `LoopOptions`: uses `& Partial<ObservabilityContextMixin>` instead of individual `logger?`, `metrics?`
+   - `LoopOptions`: uses `& Partial<ObservabilityContextMixin>`
    - `ModelLoopStreamArgs`: uses `& ObservabilityContextMixin`
    - `MastraCustomLLMOptions` (both `base.types.ts` and `llm/index.ts`): uses `ObservabilityContextMixin &`
 
@@ -44,9 +46,15 @@ Multi-phase migration from standalone `tracingContext: TracingContext` to the fu
 
 ## Key Design Decisions
 
+### VNext Naming Pattern
+
+The mixin uses `loggerVNext: LoggerContext` instead of `logger` to avoid conflict with the existing `logger: IMastraLogger` infrastructure logger used throughout the codebase (`MastraPrimitives.logger`, `LoopOptions.logger`, `MastraBase.logger`).
+
+The `VNext` suffix follows an established codebase pattern: `MastraLLMVNext`, `streamVNext`, `generateVNext`, `resumeStreamVNext`, `updateWorkingMemoryVNext`.
+
 ### Naming Convention (documented in the mixin JSDoc)
 
-- **Short names** for **usage sites**: `tracing.createSpan()`, `logger.info()`, `metrics.record()`
+- **Short names** for **usage sites**: `tracing.createSpan()`, `loggerVNext.info()`, `metrics.record()`
 - **`tracingContext`** (with "Context" suffix) preferred at **forwarding sites** where it clarifies a structural context is being passed
 - `tracingContext` is NOT deprecated — it's an equal alias for `tracing`
 
@@ -54,109 +62,77 @@ Multi-phase migration from standalone `tracingContext: TracingContext` to the fu
 
 ```
 tracingContext → create child span → new tracingContext
-                                   → new logger  (correlated to child span)
-                                   → new metrics (tagged with child span metadata)
+                                   → new loggerVNext (correlated to child span)
+                                   → new metrics     (tagged with child span metadata)
 ```
 
 - `tracingContext` is the **source** — it represents position in the span tree
-- `logger` and `metrics` are **derived** — rebuilt from the current span for correlation
-
-### Logger Naming Conflict Resolution
-
-- `IMastraLogger` (infrastructure logger) was `logger` in `LoopOptions` — conflicted with `ObservabilityContextMixin.logger: LoggerContext`
-- Resolved by renaming to `mastraLogger: IMastraLogger` in internal types
-- `MastraPrimitives.logger: IMastraLogger` (public API) was NOT renamed
+- `loggerVNext` and `metrics` are **derived** — rebuilt from the current span for correlation
 
 ### Mastra Class Getter
 
-- `get log(): LoggerContext` on the `Mastra` class — NOT `get logger()` due to conflict with `MastraPrimitives.logger: IMastraLogger`
-- Decision: **keep as `get log()`** — public API change not worth it
-
----
-
-## Open Discussion (Not Started)
-
-The last conversation topic was whether to rename `logger` to `log` in the mixin and everywhere else:
-
-### The Proposal: `logger: LoggerContext` → `log: LoggerContext`
-
-**Motivation:**
-- Eliminates ALL naming conflicts with `IMastraLogger` across the codebase
-- `log.info()`, `log.warn()` — very natural, matches common patterns (pino, winston)
-- Matches the existing `Mastra.get log()` getter
-- Could eventually add `get logger(): IMastraLogger` back on Mastra if desired
-
-**Trade-offs:**
-- `log` could be confused with `console.log` (though context makes it clear)
-- Breaks symmetry slightly: `tracing`, `log`, `metrics` vs `tracing`, `logger`, `metrics`
-- More rename churn after we just settled on `logger`
-
-**What would change if proceeding:**
-- `ObservabilityContextMixin.logger` → `.log`
-- `createObservabilityContext` / `resolveObservabilityContext` — field name
-- `ProcessorObservabilityContext.logger` → `.log`
-- All destructuring sites using `logger` from the mixin
-- `MastraModelOutputOptions.logger` → `.log`
-- The naming convention comment on the mixin
-
-**Decision status:** User leaned toward doing it. Also briefly explored further destructuring (`trace, log, counter, histogram, gauge`) but agreed the 3-field grouping (tracing, log/logger, metrics) mapping to the three observability pillars is the right abstraction level. **No code changes were made for this rename yet.**
+- `get loggerVNext(): LoggerContext` on the Mastra class — matches the mixin field name
+- `get metrics(): MetricsContext` on the Mastra class
 
 ---
 
 ## All Modified Files (Current State)
 
 ### Core observability types and factory
-- `packages/core/src/observability/types/core.ts` — `ObservabilityContextMixin` definition with JSDoc
-- `packages/core/src/observability/context-factory.ts` — `createObservabilityContext()` and `resolveObservabilityContext()`
-- `packages/core/src/observability/no-op.ts` — no-op defaults
+- `packages/core/src/observability/types/core.ts` — `ObservabilityContextMixin` with `loggerVNext`
+- `packages/core/src/observability/context-factory.ts` — factory returns `loggerVNext` field
+- `packages/core/src/observability/context-factory.test.ts` — tests use `ctx.loggerVNext`
+- `packages/core/src/observability/no-op.ts` — no-op defaults (unchanged, type name `LoggerContext` same)
 - `packages/core/src/observability/index.ts` — barrel exports
 
-### Loop system (mastraLogger rename + mixin usage)
-- `packages/core/src/loop/types.ts` — `mastraLogger`, `& Partial<ObservabilityContextMixin>`
-- `packages/core/src/loop/loop.ts` — destructuring `mastraLogger: logger`, passes `logger`/`metrics` from mixin
-- `packages/core/src/loop/workflows/agentic-execution/llm-execution-step.ts` — `mastraLogger: logger` alias
-- `packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts` — `mastraLogger: logger` alias
-- `packages/core/src/loop/workflows/agentic-execution/llm-mapping-step.ts` — `rest.mastraLogger`
+### Loop system
+- `packages/core/src/loop/types.ts` — `logger: IMastraLogger` (kept as-is), `& Partial<ObservabilityContextMixin>`
+- `packages/core/src/loop/loop.ts` — passes `loggerVNext` from mixin to `MastraModelOutput`
+- `packages/core/src/loop/workflows/agentic-execution/llm-execution-step.ts` — destructures `logger` (IMastraLogger)
+- `packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts` — destructures `logger` (IMastraLogger)
+- `packages/core/src/loop/workflows/agentic-execution/llm-mapping-step.ts` — `rest.logger` (IMastraLogger)
 - `packages/core/src/loop/network/index.ts` — inlined `createObservabilityContext` spread
 
 ### LLM types (mixin usage)
-- `packages/core/src/llm/model/model.loop.types.ts` — `& ObservabilityContextMixin`
-- `packages/core/src/llm/model/model.loop.ts` — destructures `logger`/`metrics` from mixin
+- `packages/core/src/llm/model/model.loop.types.ts` — `& ObservabilityContextMixin`, Omit uses `'logger'`
+- `packages/core/src/llm/model/model.loop.ts` — destructures `loggerVNext: observabilityLogger`
 - `packages/core/src/llm/model/base.types.ts` — `ObservabilityContextMixin &` (v4 AI SDK)
 - `packages/core/src/llm/index.ts` — `ObservabilityContextMixin &` (v5 AI SDK)
 
 ### Stream/processor system
-- `packages/core/src/stream/types.ts` — `MastraModelOutputOptions` uses `logger`/`metrics`
-- `packages/core/src/stream/base/output.ts` — passes `logger`/`metrics` to processor calls
-- `packages/core/src/processors/runner.ts` — `ProcessorObservabilityContext` with `logger`/`metrics`
+- `packages/core/src/stream/types.ts` — `MastraModelOutputOptions` uses `loggerVNext`/`metrics`
+- `packages/core/src/stream/base/output.ts` — passes `loggerVNext`/`metrics` to processor calls
+- `packages/core/src/processors/runner.ts` — `ProcessorObservabilityContext` with `loggerVNext`/`metrics`
 
 ### Agent system
 - `packages/core/src/agent/agent.ts` — inlined `createObservabilityContext` spreads
 - `packages/core/src/agent/agent-legacy.ts` — uses `observabilityContext` variable (multi-use)
 - `packages/core/src/agent/workflows/prepare-stream/map-results-step.ts` — inlined spreads
 
-### Workflow system (child span fixes)
-- `packages/core/src/workflows/workflow.ts` — 2 processor sites use full `createObservabilityContext()`
-- `packages/core/src/workflows/evented/workflow.ts` — 2 processor sites use full `createObservabilityContext()`
+### Workflow system
+- `packages/core/src/workflows/workflow.ts` — processor sites use `createObservabilityContext()`
+- `packages/core/src/workflows/evented/workflow.ts` — processor sites use `createObservabilityContext()`
+- `packages/core/src/workflows/handlers/entry.ts` — passes `loggerVNext` through entry execution
+- `packages/core/src/workflows/handlers/step.ts` — passes `loggerVNext` through step execution
+
+### Evals system
+- `packages/core/src/evals/hooks.ts` — passes `loggerVNext` in scorer hook payload
 
 ### Mastra class
-- `packages/core/src/mastra/index.ts` — `get log(): LoggerContext` and `get metrics(): MetricsContext` getters (unchanged from previous phase)
+- `packages/core/src/mastra/index.ts` — `get loggerVNext(): LoggerContext` and `get metrics(): MetricsContext` getters
 
 ---
 
 ## Verification Status
 
-- **typecheck:** PASSING
+- **typecheck:** PASSING (only pre-existing `@mastra/editor` errors unrelated to this work)
+- **build:core:** PASSING
 - **lint:** PASSING
 - **prettier:** PASSING
 - **unit/integration tests:** Not run (requires LLM API credentials not available in sandbox)
 
 ---
 
-## How to Resume
+## No Pending Tasks
 
-1. Open the branch `esp/obs_core_additions`
-2. Read this file for full context
-3. The next decision point is: **rename `logger` → `log` in the mixin?** (user was leaning yes)
-4. If proceeding with the rename, update all files listed above that reference `logger: LoggerContext`
-5. After that, the migration is essentially complete — consider running the full test suite
+All requested changes are complete. The migration is done.

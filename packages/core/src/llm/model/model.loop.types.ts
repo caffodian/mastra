@@ -43,6 +43,6 @@ export type ModelLoopStreamArgs<TOOLS extends ToolSet, OUTPUT = undefined> = {
   returnScorerData?: boolean;
   messageList: MessageList;
 } & ObservabilityContextMixin &
-  Omit<LoopOptions<TOOLS, OUTPUT>, 'models' | 'messageList' | 'mastraLogger'>;
+  Omit<LoopOptions<TOOLS, OUTPUT>, 'models' | 'messageList' | 'logger'>;
 
 export type ModelMethodType = 'generate' | 'stream';

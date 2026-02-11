@@ -25,7 +25,7 @@ export function createObservabilityContext(
 
   return {
     tracing,
-    logger: loggerContext ?? noOpLoggerContext,
+    loggerVNext: loggerContext ?? noOpLoggerContext,
     metrics: metricsContext ?? noOpMetricsContext,
     tracingContext: tracing, // alias — preferred at forwarding sites
   };
@@ -39,5 +39,5 @@ export function createObservabilityContext(
  * @returns Complete ObservabilityContextMixin
  */
 export function resolveObservabilityContext(partial: Partial<ObservabilityContextMixin>): ObservabilityContextMixin {
-  return createObservabilityContext(partial.tracing ?? partial.tracingContext, partial.logger, partial.metrics);
+  return createObservabilityContext(partial.tracing ?? partial.tracingContext, partial.loggerVNext, partial.metrics);
 }

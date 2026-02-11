@@ -31,11 +31,11 @@ export function createLLMMappingStep<Tools extends ToolSet = ToolSet, OUTPUT = u
    * 3. Blocking/tripwire works correctly for tool results
    */
   const processorRunner =
-    rest.outputProcessors?.length && rest.mastraLogger
+    rest.outputProcessors?.length && rest.logger
       ? new ProcessorRunner({
           inputProcessors: [],
           outputProcessors: rest.outputProcessors,
-          logger: rest.mastraLogger,
+          logger: rest.logger,
           agentName: 'LLMMappingStep',
           processorStates: rest.processorStates,
         })

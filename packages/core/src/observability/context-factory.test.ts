@@ -9,11 +9,11 @@ describe('createObservabilityContext', () => {
     const ctx = createObservabilityContext();
 
     expect(ctx.tracing.currentSpan).toBeUndefined();
-    expect(ctx.logger).toBe(noOpLoggerContext);
+    expect(ctx.loggerVNext).toBe(noOpLoggerContext);
     expect(ctx.metrics).toBe(noOpMetricsContext);
   });
 
-  it('returns deprecated tracingContext alias pointing to tracing', () => {
+  it('returns tracingContext alias pointing to tracing', () => {
     const ctx = createObservabilityContext();
 
     expect(ctx.tracingContext).toBe(ctx.tracing);
@@ -41,7 +41,7 @@ describe('createObservabilityContext', () => {
 
     const ctx = createObservabilityContext(undefined, mockLogger);
 
-    expect(ctx.logger).toBe(mockLogger);
+    expect(ctx.loggerVNext).toBe(mockLogger);
     expect(ctx.tracing.currentSpan).toBeUndefined(); // still no-op
   });
 
@@ -56,7 +56,7 @@ describe('createObservabilityContext', () => {
 
     expect(ctx.metrics).toBe(mockMetrics);
     expect(ctx.tracing.currentSpan).toBeUndefined(); // still no-op
-    expect(ctx.logger).toBe(noOpLoggerContext); // still no-op
+    expect(ctx.loggerVNext).toBe(noOpLoggerContext); // still no-op
   });
 
   it('uses all provided contexts when passed', () => {
@@ -78,7 +78,7 @@ describe('createObservabilityContext', () => {
     const ctx = createObservabilityContext(mockTracing, mockLogger, mockMetrics);
 
     expect(ctx.tracing).toBe(mockTracing);
-    expect(ctx.logger).toBe(mockLogger);
+    expect(ctx.loggerVNext).toBe(mockLogger);
     expect(ctx.metrics).toBe(mockMetrics);
   });
 });

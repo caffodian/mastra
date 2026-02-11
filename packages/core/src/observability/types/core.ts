@@ -39,17 +39,20 @@ import type {
  * `tracingContext` is the **source** — it represents your position in the span tree.
  * Creating a child span produces a new `tracingContext` with that child as `currentSpan`.
  *
- * `logger` and `metrics` are **derived** — they are rebuilt from the current span so that
+ * `loggerVNext` and `metrics` are **derived** — they are rebuilt from the current span so that
  * log entries and metric data points are automatically correlated to the active trace:
  *
  * ```
  * tracingContext → create child span → new tracingContext
- *                                    → new logger  (correlated to child span)
- *                                    → new metrics (tagged with child span metadata)
+ *                                    → new loggerVNext (correlated to child span)
+ *                                    → new metrics     (tagged with child span metadata)
  * ```
  *
- * The short names (`tracing`, `logger`, `metrics`) read naturally at **usage sites**:
- * `tracing.createSpan()`, `logger.info()`, `metrics.record()`.
+ * The short names (`tracing`, `loggerVNext`, `metrics`) read naturally at **usage sites**:
+ * `tracing.createSpan()`, `loggerVNext.info()`, `metrics.record()`.
+ *
+ * `loggerVNext` uses the VNext suffix to distinguish from the existing `logger: IMastraLogger`
+ * infrastructure logger used throughout the codebase (e.g. `MastraPrimitives.logger`).
  *
  * The `tracingContext` alias is preferred at **forwarding sites** where the "Context"
  * suffix clarifies that a structural context object is being passed, not a subsystem.
@@ -58,8 +61,8 @@ export interface ObservabilityContextMixin {
   /** Tracing context for span creation and tree navigation. */
   tracing: TracingContext;
 
-  /** Logger derived from the current span — log entries are trace-correlated. */
-  logger: LoggerContext;
+  /** Logger derived from the current span — log entries are trace-correlated. Uses VNext suffix to avoid conflict with IMastraLogger. */
+  loggerVNext: LoggerContext;
 
   /** Metrics derived from the current span — data points are span-tagged. */
   metrics: MetricsContext;

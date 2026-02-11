@@ -30,7 +30,7 @@ import type {
  */
 export interface ProcessorObservabilityContext {
   tracingContext?: TracingContext;
-  logger?: LoggerContext;
+  loggerVNext?: LoggerContext;
   metrics?: MetricsContext;
 }
 
@@ -786,12 +786,12 @@ export class ProcessorRunner {
       stepNumber,
       steps,
       tracingContext,
-      logger: obsLogger,
+      loggerVNext: obsLogger,
       metrics: obsMetrics,
       requestContext,
       writer,
     } = args;
-    const observability: ProcessorObservabilityContext = { tracingContext, logger: obsLogger, metrics: obsMetrics };
+    const observability: ProcessorObservabilityContext = { tracingContext, loggerVNext: obsLogger, metrics: obsMetrics };
 
     // Initialize with all provided values - processors will modify this object in order
     const stepInput: RunProcessInputStepResult = {
@@ -1014,13 +1014,13 @@ export class ProcessorRunner {
       toolCalls,
       text,
       tracingContext,
-      logger: obsLogger,
+      loggerVNext: obsLogger,
       metrics: obsMetrics,
       requestContext,
       retryCount = 0,
       writer,
     } = args;
-    const observability: ProcessorObservabilityContext = { tracingContext, logger: obsLogger, metrics: obsMetrics };
+    const observability: ProcessorObservabilityContext = { tracingContext, loggerVNext: obsLogger, metrics: obsMetrics };
 
     // Run through all output processors that have processOutputStep
     for (const [index, processorOrWorkflow] of this.outputProcessors.entries()) {

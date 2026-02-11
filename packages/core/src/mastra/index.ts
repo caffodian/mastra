@@ -2463,7 +2463,7 @@ export class Mastra<
    *
    * Note: For the infrastructure logger (IMastraLogger), use getLogger() instead.
    */
-  get log(): LoggerContext {
+  get loggerVNext(): LoggerContext {
     return this.#observability.getDefaultInstance()?.getLoggerContext?.() ?? noOpLoggerContext;
   }
 
