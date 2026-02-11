@@ -1,7 +1,7 @@
 import type { MastraScorers } from '../evals';
 import type { PubSub } from '../events';
 import type { Mastra } from '../mastra';
-import type { ObservabilityContextMixin } from '../observability';
+import type { ObservabilityContextMixin, TracingContext } from '../observability';
 import type { RequestContext } from '../request-context';
 import type { InferZodLikeSchema, SchemaWithValidation } from '../stream/base/schema';
 import type { ToolStream } from '../tools/stream';
