@@ -56,7 +56,9 @@ export function ScorerCreateContent({ onSuccess }: ScorerCreateContentProps) {
 
   return (
     <AgentEditLayout
-      leftSlot={<ScorerEditSidebar form={form} onPublish={handlePublish} isSubmitting={isSubmitting} formRef={formRef} />}
+      leftSlot={
+        <ScorerEditSidebar form={form} onPublish={handlePublish} isSubmitting={isSubmitting} formRef={formRef} />
+      }
     >
       <form ref={formRef} className="h-full">
         <ScorerEditMain form={form} />
