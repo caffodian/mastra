@@ -33,7 +33,14 @@ import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig } from '../memory/types';
 import type { ObservabilityContextMixin, TracingContext, TracingProperties } from '../observability';
-import { EntityType, InternalSpans, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
+import {
+  EntityType,
+  InternalSpans,
+  SpanType,
+  getOrCreateSpan,
+  createObservabilityContext,
+  resolveObservabilityContext,
+} from '../observability';
 import type {
   InputProcessorOrWorkflow,
   OutputProcessorOrWorkflow,
@@ -1643,6 +1650,7 @@ export class Agent<
     instructions?: DynamicArgument<string>;
   } & Partial<ObservabilityContextMixin>) {
     // need to use text, not object output or it will error for models that don't support structured output (eg Deepseek R1)
+    const resolvedObservabilityContext = resolveObservabilityContext(observabilityContext);
     const llm = await this.getLLM({ requestContext, model });
 
     const normMessage = new MessageList().add(message, 'user').get.all.ui().at(-1);
@@ -1695,7 +1703,7 @@ export class Agent<
       const result = (llm as MastraLLMVNext).stream({
         methodType: 'generate',
         requestContext,
-        ...observabilityContext,
+        ...resolvedObservabilityContext,
         messageList,
         agentId: this.id,
         agentName: this.name,
@@ -1705,7 +1713,7 @@ export class Agent<
     } else {
       const result = await (llm as MastraLLMV1).__text({
         requestContext,
-        ...observabilityContext,
+        ...resolvedObservabilityContext,
         messages: [
           {
             role: 'system',
