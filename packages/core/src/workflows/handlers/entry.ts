@@ -132,8 +132,9 @@ export async function executeEntry(
     outputWriter,
     disableScorers,
     perStep,
+    ...rest
   } = params;
-  const observabilityContext = resolveObservabilityContext(params);
+  const observabilityContext = resolveObservabilityContext(rest);
 
   const prevOutput = engine.getStepOutput(stepResults, prevStep);
   let execResults: any;

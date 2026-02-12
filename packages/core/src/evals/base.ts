@@ -475,9 +475,8 @@ class MastraScorer<
         description: `Scorer step: ${scorerStep.name}`,
         inputSchema: z.any(),
         outputSchema: z.any(),
-        execute: async params => {
-          const { inputData, getInitData } = params;
-          const observabilityContext = resolveObservabilityContext(params);
+        execute: async ({ inputData, getInitData, ...rest }) => {
+          const observabilityContext = resolveObservabilityContext(rest);
           const { accumulatedResults = {}, generatedPrompts = {} } = inputData;
           const { run } = getInitData<{ run: ScorerRun<TInput, TRunOutput> }>();
 

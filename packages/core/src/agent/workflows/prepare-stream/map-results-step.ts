@@ -52,8 +52,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
   },
   ModelLoopStreamArgs<any, OUTPUT>
 >['execute'] {
-  return async params => {
-    const { inputData, bail } = params;
+  return async ({ inputData, bail, ...observabilityContext }) => {
     const toolsData = inputData['prepare-tools-step'];
     const memoryData = inputData['prepare-memory-step'];
 
@@ -115,7 +114,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
       const modelOutput = await getModelOutputForTripwire<OUTPUT>({
         tripwire: memoryData.tripwire!,
         runId,
-        ...resolveObservabilityContext(params),
+        ...resolveObservabilityContext(observabilityContext),
         options: options,
         model: agentModel,
         messageList: memoryData.messageList,
@@ -205,7 +204,7 @@ export function createMapResultsStep<OUTPUT = undefined>({
           try {
             const outputText = messageList.get.all
               .core()
-              .map(m => m.content)
+              .map((m: { content: unknown }) => m.content)
               .join('\n');
 
             await capabilities.executeOnFinish({

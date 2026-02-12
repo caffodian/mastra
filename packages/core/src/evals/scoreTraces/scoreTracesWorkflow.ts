@@ -22,9 +22,8 @@ const getTraceStep = createStep({
     scorerId: z.string(),
   }),
   outputSchema: z.any(),
-  execute: async params => {
-    const { inputData, mastra } = params;
-    const observabilityContext = resolveObservabilityContext(params);
+  execute: async ({ inputData, mastra, ...rest }) => {
+    const observabilityContext = resolveObservabilityContext(rest);
     const logger = mastra.getLogger();
     if (!logger) {
       console.warn(

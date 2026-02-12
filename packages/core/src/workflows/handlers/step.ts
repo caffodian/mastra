@@ -88,8 +88,9 @@ export async function executeStep(
     serializedStepGraph,
     iterationCount,
     perStep,
+    ...rest
   } = params;
-  const observabilityContext = resolveObservabilityContext(params);
+  const observabilityContext = resolveObservabilityContext(rest);
 
   const stepCallId = randomUUID();
 
@@ -538,8 +539,8 @@ export interface RunScorersParams extends ObservabilityContextMixin {
 }
 
 export async function runScorersForStep(params: RunScorersParams): Promise<void> {
-  const { engine, scorers, runId, input, output, workflowId, stepId, requestContext, disableScorers } = params;
-  const observabilityContext = resolveObservabilityContext(params);
+  const { engine, scorers, runId, input, output, workflowId, stepId, requestContext, disableScorers, ...rest } = params;
+  const observabilityContext = resolveObservabilityContext(rest);
 
   let scorersToUse = scorers;
   if (typeof scorersToUse === 'function') {

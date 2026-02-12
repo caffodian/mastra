@@ -63,8 +63,8 @@ export function createPrepareMemoryStep<OUTPUT = undefined>({
     id: 'prepare-memory-step',
     inputSchema: z.object({}),
     outputSchema: prepareMemoryStepOutputSchema,
-    execute: async params => {
-      const observabilityContext = resolveObservabilityContext(params);
+    execute: async ({ ...rest }) => {
+      const observabilityContext = resolveObservabilityContext(rest);
       const thread = threadFromArgs;
       const messageList = new MessageList({
         threadId: thread?.id,

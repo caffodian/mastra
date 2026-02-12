@@ -56,9 +56,8 @@ export function createStreamStep<OUTPUT = undefined>({
     id: 'stream-text-step',
     inputSchema: z.any(), // tried to type this in various ways but it's too complex
     outputSchema: z.instanceof(MastraModelOutput<OUTPUT>),
-    execute: async params => {
-      const { inputData } = params;
-      const { tracingContext } = resolveObservabilityContext(params);
+    execute: async ({ inputData, ...rest }) => {
+      const { tracingContext } = resolveObservabilityContext(rest);
       // Instead of validating inputData with zod, we just cast it to the type we know it should be
       const validatedInputData = inputData as ModelLoopStreamArgs<any, OUTPUT>;
 
