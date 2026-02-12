@@ -1,5 +1,156 @@
 # @mastra/core
 
+## 1.4.0-alpha.0
+
+### Minor Changes
+
+- Fix LocalFilesystem.resolvePath handling of absolute paths and improve filesystem info. ([#12971](https://github.com/mastra-ai/mastra/pull/12971))
+  - Fix absolute path resolution: paths were incorrectly stripped of leading slashes and resolved relative to basePath, causing PermissionError for valid paths (e.g. skills processor accessing project-local skills directories).
+  - Make `FilesystemInfo` generic (`FilesystemInfo<TMetadata>`) so providers can type their metadata.
+  - Move provider-specific fields (`basePath`, `contained`) to metadata in LocalFilesystem.getInfo().
+  - Update LocalFilesystem.getInstructions() for uncontained filesystems to warn agents against listing /.
+  - Use FilesystemInfo type in WorkspaceInfo instead of duplicated inline shape.
+
+- Add `workflow-step-progress` stream event for foreach workflow steps. Each iteration emits a progress event with `completedCount`, `totalCount`, `currentIndex`, `iterationStatus` (`success` | `failed` | `suspended`), and optional `iterationOutput`. Both the default and evented execution engines emit these events. ([#12838](https://github.com/mastra-ai/mastra/pull/12838))
+
+  The Mastra Studio UI now renders a progress bar with an N/total counter on foreach nodes, updating in real time as iterations complete:
+
+  ```ts
+  // Consuming progress events from the workflow stream
+  const run = workflow.createRun();
+  const result = await run.start({ inputData });
+  const stream = result.stream;
+
+  for await (const chunk of stream) {
+    if (chunk.type === 'workflow-step-progress') {
+      console.log(`${chunk.payload.completedCount}/${chunk.payload.totalCount} - ${chunk.payload.iterationStatus}`);
+    }
+  }
+  ```
+
+  `@mastra/react`: The `mapWorkflowStreamChunkToWatchResult` reducer now accumulates `foreachProgress` from `workflow-step-progress` events into step state, making progress data available to React consumers via the existing workflow watch hooks.
+
+- Added observational memory configuration support for stored agents. When creating or editing a stored agent in the playground, you can now enable observational memory and configure its settings including model provider/name, scope (thread or resource), share token budget, and detailed observer/reflector parameters like token limits, buffer settings, and blocking thresholds. The configuration is serialized as part of the agent's memory config and round-trips through storage. ([#12962](https://github.com/mastra-ai/mastra/pull/12962))
+
+  **Example usage in the playground:**
+
+  Enable the Observational Memory toggle in the Memory section, then configure:
+  - Top-level model (provider + model) used by both observer and reflector
+  - Scope: `thread` (per-conversation) or `resource` (shared across threads)
+  - Expand **Observer** or **Reflector** sections to override models and tune token budgets
+
+  **Programmatic usage via client SDK:**
+
+  ```ts
+  await client.createStoredAgent({
+    name: 'My Agent',
+    // ...other config
+    memory: {
+      observationalMemory: true, // enable with defaults
+      options: { lastMessages: 40 },
+    },
+  });
+
+  // Or with custom configuration:
+  await client.createStoredAgent({
+    name: 'My Agent',
+    memory: {
+      observationalMemory: {
+        model: 'google/gemini-2.5-flash',
+        scope: 'resource',
+        shareTokenBudget: true,
+        observation: { messageTokens: 50000 },
+        reflection: { observationTokens: 60000 },
+      },
+      options: { lastMessages: 40 },
+    },
+  });
+  ```
+
+  **Programmatic usage via editor:**
+
+  ```ts
+  await editor.agent.create({
+    name: 'My Agent',
+    // ...other config
+    memory: {
+      observationalMemory: true, // enable with defaults
+      options: { lastMessages: 40 },
+    },
+  });
+
+  // Or with custom configuration:
+  await editor.agent.create({
+    name: 'My Agent',
+    memory: {
+      observationalMemory: {
+        model: 'google/gemini-2.5-flash',
+        scope: 'resource',
+        shareTokenBudget: true,
+        observation: { messageTokens: 50000 },
+        reflection: { observationTokens: 60000 },
+      },
+      options: { lastMessages: 40 },
+    },
+  });
+  ```
+
+- **Added** ([#12764](https://github.com/mastra-ai/mastra/pull/12764))
+  Added a `suppressFeedback` option to hide internal completion‑check messages from the stream. This keeps the conversation history clean while leaving existing behavior unchanged by default.
+
+  **Example**
+  Before:
+
+  ```ts
+  const agent = await mastra.createAgent({
+    completion: { validate: true },
+  });
+  ```
+
+  After:
+
+  ```ts
+  const agent = await mastra.createAgent({
+    completion: { validate: true, suppressFeedback: true },
+  });
+  ```
+
+- **Split workspace lifecycle interfaces** ([#12978](https://github.com/mastra-ai/mastra/pull/12978))
+
+  The shared `Lifecycle` interface has been split into provider-specific types that match actual usage:
+  - `FilesystemLifecycle` — two-phase: `init()` → `destroy()`
+  - `SandboxLifecycle` — three-phase: `start()` → `stop()` → `destroy()`
+
+  The base `Lifecycle` type is still exported for backward compatibility.
+
+  **Added `onInit` / `onDestroy` callbacks to `MastraFilesystem`**
+
+  The `MastraFilesystem` base class now accepts optional lifecycle callbacks via `MastraFilesystemOptions`, matching the existing `onStart` / `onStop` / `onDestroy` callbacks on `MastraSandbox`.
+
+  ```ts
+  const fs = new LocalFilesystem({
+    basePath: './data',
+    onInit: ({ filesystem }) => {
+      console.log('Filesystem ready:', filesystem.status);
+    },
+    onDestroy: ({ filesystem }) => {
+      console.log('Cleaning up...');
+    },
+  });
+  ```
+
+  `onInit` fires after the filesystem reaches `ready` status (non-fatal on failure). `onDestroy` fires before the filesystem is torn down.
+
+### Patch Changes
+
+- Update provider registry and model documentation with latest models and providers ([`7ef618f`](https://github.com/mastra-ai/mastra/commit/7ef618f3c49c27e2f6b27d7f564c557c0734325b))
+
+- Fixed Anthropic API rejection errors caused by empty text content blocks in assistant messages. During streaming with web search citations, empty text parts could be persisted to the database and then rejected by Anthropic's API with 'text content blocks must be non-empty' errors. The fix filters out these empty text blocks before persistence, ensuring stored conversation history remains valid for Anthropic models. Fixes `#12553`. ([#12711](https://github.com/mastra-ai/mastra/pull/12711))
+
+- Improve error messages when processor workflows or model fallback retries fail. ([#12970](https://github.com/mastra-ai/mastra/pull/12970))
+  - Include the last error message and cause when all fallback models are exhausted, instead of the generic "Exhausted all fallback models" message.
+  - Extract error details from failed workflow results and individual step failures when a processor workflow fails, instead of just reporting "failed with status: failed".
+
 ## 1.3.0
 
 ### Minor Changes

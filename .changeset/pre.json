@@ -106,7 +106,37 @@
     "@internal/workspace-test-utils": "0.0.2",
     "@mastra/e2b": "0.0.1",
     "@mastra/gcs": "0.0.1",
-    "@mastra/s3": "0.0.1"
+    "@mastra/s3": "0.0.1",
+    "@mastra/opencode": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "@mastra_auth-better-auth-12964-dependencies",
+    "@mastra_gcs-12931-dependencies",
+    "@mastra_playground-ui-12949-dependencies",
+    "automated-provider-registry-20260211-183202",
+    "bright-foxes-wave",
+    "calm-zebras-drum",
+    "filesystem-getinfo-completeness",
+    "fix-empty-text-content-blocks",
+    "fix-local-filesystem-absolute-paths",
+    "fix-om-non-integer-token-counts",
+    "fix-prompt-experiment-localstorage",
+    "foreach-step-progress",
+    "fruity-beans-laugh",
+    "gcs-enforce-overwrite-option",
+    "gentle-owls-sing",
+    "improve-processor-error-messages",
+    "many-stars-enter",
+    "metal-maps-watch",
+    "new-lemons-smash",
+    "quick-doors-rest",
+    "s3-enforce-overwrite-option",
+    "short-coins-poke",
+    "six-sheep-relax",
+    "studio-default-basepath",
+    "suppress-completion-feedback",
+    "true-lamps-design",
+    "workspace-api-filesystem-info",
+    "yellow-pigs-end"
+  ]
 }

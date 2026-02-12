@@ -1,5 +1,40 @@
 # @mastra/gcs
 
+## 0.1.0-alpha.0
+
+### Minor Changes
+
+- Updated minimum `@mastra/core` peer dependency to support the new `FilesystemLifecycle` and `SandboxLifecycle` interfaces and `onInit` / `onDestroy` lifecycle callbacks. ([#12978](https://github.com/mastra-ai/mastra/pull/12978))
+
+  See the `@mastra/s3` and `@mastra/gcs` patch changesets for usage examples.
+
+### Patch Changes
+
+- dependencies updates: ([#12931](https://github.com/mastra-ai/mastra/pull/12931))
+  - Updated dependency [`@google-cloud/storage@^7.19.0` ↗︎](https://www.npmjs.com/package/@google-cloud/storage/v/7.19.0) (from `^7.18.0`, in `dependencies`)
+
+- Add typed metadata to getInfo() return type and ensure all common FilesystemInfo fields (error, readOnly) are returned. ([#12971](https://github.com/mastra-ai/mastra/pull/12971))
+
+- Added `overwrite: false` support to `writeFile` and `copyFile`. Previously, the `overwrite` option was ignored, allowing files to be silently overwritten. Now throws `FileExistsError` when `overwrite` is set to `false` and the destination file already exists. ([#12912](https://github.com/mastra-ai/mastra/pull/12912))
+
+- Added optional `onInit` and `onDestroy` lifecycle callbacks to `GCSFilesystemOptions`. ([#12978](https://github.com/mastra-ai/mastra/pull/12978))
+
+  ```ts
+  const fs = new GCSFilesystem({
+    bucket: 'my-bucket',
+    projectId: 'my-project',
+    onInit: ({ filesystem }) => {
+      console.log('GCS filesystem ready:', filesystem.status);
+    },
+    onDestroy: ({ filesystem }) => {
+      console.log('GCS filesystem shutting down');
+    },
+  });
+  ```
+
+- Updated dependencies [[`7ef618f`](https://github.com/mastra-ai/mastra/commit/7ef618f3c49c27e2f6b27d7f564c557c0734325b), [`b896b41`](https://github.com/mastra-ai/mastra/commit/b896b41343de7fcc14442fb40fe82d189e65bbe2), [`6415277`](https://github.com/mastra-ai/mastra/commit/6415277a438faa00db2af850ead5dee25f40c428), [`0831bbb`](https://github.com/mastra-ai/mastra/commit/0831bbb5bc750c18e9b22b45f18687c964b70828), [`63f7eda`](https://github.com/mastra-ai/mastra/commit/63f7eda605eb3e0c8c35ee3912ffe7c999c69f69), [`a5b67a3`](https://github.com/mastra-ai/mastra/commit/a5b67a3589a74415feb663a55d1858324a2afde9), [`eb36bd8`](https://github.com/mastra-ai/mastra/commit/eb36bd8c52fcd6ec9674ac3b7a6412405b5983e1), [`3cbf121`](https://github.com/mastra-ai/mastra/commit/3cbf121f55418141924754a83102aade89835947)]:
+  - @mastra/core@1.4.0-alpha.0
+
 ## 0.0.1
 
 ### Patch Changes
