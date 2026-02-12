@@ -33,14 +33,7 @@ import type { Mastra } from '../mastra';
 import type { MastraMemory } from '../memory/memory';
 import type { MemoryConfig } from '../memory/types';
 import type { ObservabilityContextMixin, TracingContext, TracingProperties } from '../observability';
-import {
-  EntityType,
-  InternalSpans,
-  SpanType,
-  getOrCreateSpan,
-  createObservabilityContext,
-  resolveObservabilityContext,
-} from '../observability';
+import { EntityType, InternalSpans, SpanType, getOrCreateSpan, createObservabilityContext } from '../observability';
 import type {
   InputProcessorOrWorkflow,
   OutputProcessorOrWorkflow,
@@ -1648,9 +1641,7 @@ export class Agent<
     requestContext?: RequestContext;
     model?: DynamicArgument<MastraModelConfig>;
     instructions?: DynamicArgument<string>;
-  } & Partial<ObservabilityContextMixin>) {
-    // need to use text, not object output or it will error for models that don't support structured output (eg Deepseek R1)
-    const resolvedObservabilityContext = resolveObservabilityContext(observabilityContext);
+  } & ObservabilityContextMixin) {
     const llm = await this.getLLM({ requestContext, model });
 
     const normMessage = new MessageList().add(message, 'user').get.all.ui().at(-1);
@@ -1703,7 +1694,7 @@ export class Agent<
       const result = (llm as MastraLLMVNext).stream({
         methodType: 'generate',
         requestContext,
-        ...resolvedObservabilityContext,
+        ...observabilityContext,
         messageList,
         agentId: this.id,
         agentName: this.name,
@@ -1713,7 +1704,7 @@ export class Agent<
     } else {
       const result = await (llm as MastraLLMV1).__text({
         requestContext,
-        ...resolvedObservabilityContext,
+        ...observabilityContext,
         messages: [
           {
             role: 'system',
@@ -1742,7 +1733,7 @@ export class Agent<
   async genTitle(
     userMessage: string | MessageInput | undefined,
     requestContext: RequestContext,
-    observabilityContext: Partial<ObservabilityContextMixin>,
+    observabilityContext: ObservabilityContextMixin,
     model?: DynamicArgument<MastraModelConfig>,
     instructions?: DynamicArgument<string>,
   ) {
@@ -1926,7 +1917,7 @@ export class Agent<
     messageList: MessageList;
     inputProcessorOverrides?: InputProcessorOrWorkflow[];
     processorStates?: Map<string, ProcessorState>;
-  } & Partial<ObservabilityContextMixin>): Promise<{
+  } & ObservabilityContextMixin): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -1986,7 +1977,7 @@ export class Agent<
     requestContext: RequestContext;
     messageList: MessageList;
     outputProcessorOverrides?: OutputProcessorOrWorkflow[];
-  } & Partial<ObservabilityContextMixin>): Promise<{
+  } & ObservabilityContextMixin): Promise<{
     messageList: MessageList;
     tripwire?: {
       reason: string;
@@ -2980,7 +2971,7 @@ export class Agent<
       | Record<string, { scorer: MastraScorer['name']; sampling?: ScoringSamplingConfig }>;
     threadId?: string;
     resourceId?: string;
-  } & Partial<ObservabilityContextMixin>) {
+  } & ObservabilityContextMixin) {
     let scorers: Record<string, { scorer: MastraScorer; sampling?: ScoringSamplingConfig }> = {};
     try {
       scorers = overrideScorers

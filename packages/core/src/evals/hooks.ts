@@ -30,7 +30,7 @@ export function runScorer({
   entityType: ScoringEntityType;
   threadId?: string;
   resourceId?: string;
-} & Partial<ObservabilityContextMixin>) {
+} & ObservabilityContextMixin) {
   let shouldExecute = false;
 
   if (!scorerObject?.sampling || scorerObject?.sampling?.type === 'none') {

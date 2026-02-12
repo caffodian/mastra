@@ -160,7 +160,7 @@ export class ProcessorRunner {
   private async executeWorkflowAsProcessor(
     workflow: ProcessorWorkflow,
     input: ProcessorStepOutput,
-    observabilityContext?: Partial<ObservabilityContextMixin>,
+    observabilityContext?: ObservabilityContextMixin,
     requestContext?: RequestContext,
     writer?: ProcessorStreamWriter,
     abortSignal?: AbortSignal,
@@ -231,7 +231,7 @@ export class ProcessorRunner {
 
   async runOutputProcessors(
     messageList: MessageList,
-    observabilityContext?: Partial<ObservabilityContextMixin>,
+    observabilityContext?: ObservabilityContextMixin,
     requestContext?: RequestContext,
     retryCount: number = 0,
     writer?: ProcessorStreamWriter,
@@ -352,7 +352,7 @@ export class ProcessorRunner {
   async processPart<OUTPUT>(
     part: ChunkType<OUTPUT>,
     processorStates: Map<string, ProcessorState<OUTPUT>>,
-    observabilityContext?: Partial<ObservabilityContextMixin>,
+    observabilityContext?: ObservabilityContextMixin,
     requestContext?: RequestContext,
     messageList?: MessageList,
     retryCount: number = 0,
@@ -504,7 +504,7 @@ export class ProcessorRunner {
 
   async runOutputProcessorsForStream<OUTPUT = undefined>(
     streamResult: MastraModelOutput<OUTPUT>,
-    observabilityContext?: Partial<ObservabilityContextMixin>,
+    observabilityContext?: ObservabilityContextMixin,
   ): Promise<ReadableStream<any>> {
     return new ReadableStream({
       start: async controller => {
@@ -563,7 +563,7 @@ export class ProcessorRunner {
 
   async runInputProcessors(
     messageList: MessageList,
-    observabilityContext?: Partial<ObservabilityContextMixin>,
+    observabilityContext?: ObservabilityContextMixin,
     requestContext?: RequestContext,
     retryCount: number = 0,
   ): Promise<MessageList> {

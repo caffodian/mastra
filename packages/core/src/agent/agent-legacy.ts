@@ -102,7 +102,7 @@ export interface AgentLegacyCapabilities {
       writableStream?: WritableStream<ChunkType>;
       methodType: AgentMethodType;
       memoryConfig?: MemoryConfig;
-    } & Partial<ObservabilityContextMixin>,
+    } & ObservabilityContextMixin,
   ): Promise<Record<string, CoreTool>>;
 
   /** Run input processors */
@@ -111,7 +111,7 @@ export interface AgentLegacyCapabilities {
       requestContext: RequestContext;
       messageList: MessageList;
       inputProcessorOverrides?: InputProcessorOrWorkflow[];
-    } & Partial<ObservabilityContextMixin>,
+    } & ObservabilityContextMixin,
   ): Promise<{
     messageList: MessageList;
     tripwire?: {
@@ -129,7 +129,7 @@ export interface AgentLegacyCapabilities {
   genTitle(
     userMessage: UIMessage | UIMessageWithMetadata,
     requestContext: RequestContext,
-    observabilityContext: Partial<ObservabilityContextMixin>,
+    observabilityContext: ObservabilityContextMixin,
     titleModel?: DynamicArgument<MastraModelConfig>,
     titleInstructions?: DynamicArgument<string>,
   ): Promise<string | undefined>;
@@ -160,7 +160,7 @@ export interface AgentLegacyCapabilities {
       requestContext: RequestContext;
       messageList: MessageList;
       outputProcessorOverrides?: OutputProcessorOrWorkflow[];
-    } & Partial<ObservabilityContextMixin>,
+    } & ObservabilityContextMixin,
   ): Promise<{
     messageList: MessageList;
     tripwire?: {
@@ -180,7 +180,7 @@ export interface AgentLegacyCapabilities {
       overrideScorers?: Record<string, any>;
       threadId?: string;
       resourceId?: string;
-    } & Partial<ObservabilityContextMixin>,
+    } & ObservabilityContextMixin,
   ): Promise<void>;
 }
 

@@ -11,7 +11,7 @@ import { ErrorCategory, ErrorDomain, MastraError } from '../../error';
 import type { MastraLLMVNext } from '../../llm/model/model.loop';
 import { noopLogger } from '../../logger';
 import type { ObservabilityContextMixin, TracingContext } from '../../observability';
-import { createObservabilityContext } from '../../observability';
+import { createObservabilityContext, resolveObservabilityContext } from '../../observability';
 import { ProcessorRunner } from '../../processors/runner';
 import type { RequestContext } from '../../request-context';
 import { ChunkFrom } from '../../stream';
@@ -403,7 +403,11 @@ async function saveMessagesWithProcessors(
 
   // Run output processors on the messages
   const { requestContext, ...observabilityContext } = context ?? {};
-  await processorRunner.runOutputProcessors(messageList, observabilityContext, requestContext);
+  await processorRunner.runOutputProcessors(
+    messageList,
+    resolveObservabilityContext(observabilityContext),
+    requestContext,
+  );
 
   // Get the processed messages and save them
   const processedMessages = messageList.get.response.db();

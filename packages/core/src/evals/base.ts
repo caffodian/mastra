@@ -563,7 +563,7 @@ class MastraScorer<
 
   private async executePromptStep(
     scorerStep: ScorerStepDefinition,
-    observabilityContext: Partial<ObservabilityContextMixin>,
+    observabilityContext: ObservabilityContextMixin,
     context: any,
   ) {
     const originalStep = this.originalPromptObjects.get(scorerStep.name);
